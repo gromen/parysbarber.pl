@@ -1,0 +1,75 @@
+---
+---
+
+<div
+  id="cookie-bar"
+  class="fixed bottom-0 left-0 right-0 z-50 translate-y-full transition-transform duration-500 bg-bg-surface dark:bg-bg-surface-dark border-t border-gray-200 dark:border-accent-blue/30 shadow-lg"
+  role="region"
+  aria-label="Zgoda na pliki cookie"
+>
+  <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <p class="text-sm text-gray-700 dark:text-text-dark text-center sm:text-left">
+      Ta strona używa plików cookie do analizy ruchu. Czy zgadzasz się?&nbsp;
+      <a
+        href="/polityka-prywatnosci"
+        class="underline underline-offset-2 hover:text-accent-red dark:hover:text-accent-gold transition-colors duration-200"
+      >
+        Polityka prywatności
+      </a>
+    </p>
+    <div class="flex gap-3 shrink-0">
+      <button
+        id="cookie-accept"
+        class="px-5 py-2 bg-accent-red hover:bg-accent-red/85 text-white rounded font-medium text-sm transition-colors duration-200 cursor-pointer"
+        type="button"
+      >
+        Akceptuj
+      </button>
+      <button
+        id="cookie-reject"
+        class="px-5 py-2 border border-gray-400 dark:border-accent-gold/50 text-gray-700 dark:text-text-dark rounded text-sm hover:bg-gray-100 dark:hover:bg-white/10 transition-colors duration-200 cursor-pointer"
+        type="button"
+      >
+        Odrzuć
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const bar = document.getElementById('cookie-bar');
+
+  function showBar(): void {
+    if (!bar) return;
+    bar.classList.remove('translate-y-full');
+  }
+
+  function hideBar(): void {
+    if (!bar) return;
+    bar.classList.add('translate-y-full');
+  }
+
+  function handleConsent(value: 'accepted' | 'rejected'): void {
+    localStorage.setItem('cookieConsent', value);
+    hideBar();
+    if (value === 'accepted') {
+      window.dispatchEvent(new CustomEvent('cookieConsentGiven'));
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const consent = localStorage.getItem('cookieConsent');
+
+    if (consent === null || consent === undefined) {
+      setTimeout(showBar, 500);
+    }
+
+    document.getElementById('cookie-accept')?.addEventListener('click', () => {
+      handleConsent('accepted');
+    });
+
+    document.getElementById('cookie-reject')?.addEventListener('click', () => {
+      handleConsent('rejected');
+    });
+  });
+</script>

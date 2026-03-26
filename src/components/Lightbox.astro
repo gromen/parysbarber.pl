@@ -1,0 +1,199 @@
+---
+---
+
+<div
+  id="lightbox"
+  class="fixed inset-0 z-[100] bg-black/90 hidden items-center justify-center"
+  aria-modal="true"
+  role="dialog"
+  aria-label="Podgląd zdjęcia"
+>
+  <!-- Close button -->
+  <button
+    id="lightbox-close"
+    type="button"
+    aria-label="Zamknij"
+    class="absolute top-4 right-4 z-10 flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/25 text-white text-2xl leading-none transition-colors duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-gold"
+  >
+    ✕
+  </button>
+
+  <!-- Prev button -->
+  <button
+    id="lightbox-prev"
+    type="button"
+    aria-label="Poprzednie zdjęcie"
+    class="absolute left-2 sm:left-4 z-10 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 hover:bg-white/25 text-white text-3xl leading-none transition-colors duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-gold select-none"
+  >
+    ‹
+  </button>
+
+  <!-- Next button -->
+  <button
+    id="lightbox-next"
+    type="button"
+    aria-label="Następne zdjęcie"
+    class="absolute right-2 sm:right-16 z-10 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 hover:bg-white/25 text-white text-3xl leading-none transition-colors duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-gold select-none"
+  >
+    ›
+  </button>
+
+  <!-- Image container — clicking the backdrop closes the lightbox -->
+  <div
+    id="lightbox-backdrop"
+    class="absolute inset-0 flex items-center justify-center p-4 sm:p-12"
+  >
+    <div
+      id="lightbox-content"
+      class="relative max-w-4xl w-full flex flex-col items-center"
+    >
+      <img
+        id="lightbox-img"
+        src=""
+        alt=""
+        class="max-w-full max-h-[85vh] object-contain rounded shadow-2xl"
+      />
+      <p
+        id="lightbox-caption"
+        class="text-white text-center mt-3 text-sm opacity-75"
+      ></p>
+    </div>
+  </div>
+</div>
+
+<script>
+  interface GalleryImage {
+    src: string;
+    alt: string;
+  }
+
+  let images: GalleryImage[] = [];
+  let currentIndex = 0;
+  let previouslyFocused: HTMLElement | null = null;
+
+  const lightbox = document.getElementById('lightbox') as HTMLDivElement | null;
+  const lightboxImg = document.getElementById('lightbox-img') as HTMLImageElement | null;
+  const lightboxCaption = document.getElementById('lightbox-caption') as HTMLParagraphElement | null;
+  const closeBtn = document.getElementById('lightbox-close') as HTMLButtonElement | null;
+  const prevBtn = document.getElementById('lightbox-prev') as HTMLButtonElement | null;
+  const nextBtn = document.getElementById('lightbox-next') as HTMLButtonElement | null;
+  const backdrop = document.getElementById('lightbox-backdrop') as HTMLDivElement | null;
+  const content = document.getElementById('lightbox-content') as HTMLDivElement | null;
+
+  function loadImages(): void {
+    const grid = document.getElementById('gallery-grid');
+    if (!grid) return;
+    const raw = grid.dataset.galleryImages;
+    if (!raw) return;
+    try {
+      images = JSON.parse(raw) as GalleryImage[];
+    } catch {
+      images = [];
+    }
+  }
+
+  function setImage(index: number): void {
+    if (!lightboxImg || !lightboxCaption || images.length === 0) return;
+    currentIndex = (index + images.length) % images.length;
+    const img = images[currentIndex];
+    lightboxImg.src = img.src;
+    lightboxImg.alt = img.alt;
+    lightboxCaption.textContent = img.alt;
+  }
+
+  function openLightbox(index: number): void {
+    if (!lightbox) return;
+    previouslyFocused = document.activeElement as HTMLElement;
+    loadImages();
+    setImage(index);
+    lightbox.classList.remove('hidden');
+    lightbox.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+    // Focus close button for accessibility
+    closeBtn?.focus();
+  }
+
+  function closeLightbox(): void {
+    if (!lightbox) return;
+    lightbox.classList.add('hidden');
+    lightbox.classList.remove('flex');
+    document.body.style.overflow = '';
+    if (lightboxImg) {
+      lightboxImg.src = '';
+      lightboxImg.alt = '';
+    }
+    previouslyFocused?.focus();
+  }
+
+  function nextImage(): void {
+    setImage(currentIndex + 1);
+  }
+
+  function prevImage(): void {
+    setImage(currentIndex - 1);
+  }
+
+  // Wire up gallery trigger buttons
+  function initTriggers(): void {
+    const buttons = document.querySelectorAll<HTMLButtonElement>('[data-lightbox]');
+    buttons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.index ?? '0', 10);
+        openLightbox(idx);
+      });
+    });
+  }
+
+  // Close on backdrop click (but not on image/content click)
+  backdrop?.addEventListener('click', (e) => {
+    if (content && content.contains(e.target as Node)) return;
+    closeLightbox();
+  });
+
+  closeBtn?.addEventListener('click', closeLightbox);
+  prevBtn?.addEventListener('click', prevImage);
+  nextBtn?.addEventListener('click', nextImage);
+
+  // Keyboard navigation
+  document.addEventListener('keydown', (e) => {
+    if (!lightbox || lightbox.classList.contains('hidden')) return;
+    switch (e.key) {
+      case 'Escape':
+        closeLightbox();
+        break;
+      case 'ArrowLeft':
+        e.preventDefault();
+        prevImage();
+        break;
+      case 'ArrowRight':
+        e.preventDefault();
+        nextImage();
+        break;
+    }
+  });
+
+  // Focus trap: keep tab focus within lightbox when open
+  lightbox?.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab') return;
+    const focusable = lightbox.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === first) {
+        e.preventDefault();
+        last?.focus();
+      }
+    } else {
+      if (document.activeElement === last) {
+        e.preventDefault();
+        first?.focus();
+      }
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    initTriggers();
+  });
+</script>

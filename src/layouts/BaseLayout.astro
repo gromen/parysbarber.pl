@@ -1,0 +1,103 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import CookieBar from '../components/CookieBar.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  ogImage?: string;
+}
+
+const {
+  title,
+  description,
+  ogImage = '/og-default.jpg',
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const ogImageURL = new URL(ogImage, Astro.site);
+---
+
+<!doctype html>
+<html lang="pl" class="" id="html-root">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Anti-flash theme init — must be first script in <head> -->
+    <script is:inline>
+      (function () {
+        try {
+          var theme = localStorage.getItem('theme') ||
+            (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          document.documentElement.classList.toggle('dark', theme === 'dark');
+        } catch (e) {}
+      })();
+    </script>
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="generator" content={Astro.generator} />
+
+    <!-- GTM ID exposed to client -->
+    {import.meta.env.PUBLIC_GTM_ID && (
+      <meta name="gtm-id" content={import.meta.env.PUBLIC_GTM_ID} />
+    )}
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImageURL} />
+  </head>
+
+  <body class="bg-bg-base dark:bg-bg-dark text-gray-900 dark:text-text-dark min-h-screen flex flex-col">
+    <Header />
+
+    <main class="flex-1">
+      <slot />
+    </main>
+
+    <Footer />
+    <CookieBar />
+
+    <!-- GTM consent manager -->
+    <script is:inline>
+      (function () {
+        var consent = localStorage.getItem('cookieConsent');
+        // GTM ID is read from the <meta name="gtm-id"> tag injected server-side
+        function loadGTM(id) {
+          if (!id) return;
+          (function (w, d, s, l, i) {
+            w[l] = w[l] || [];
+            w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+            var f = d.getElementsByTagName(s)[0];
+            var j = d.createElement(s);
+            var dl = l !== 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+          })(w, d, 'script', 'dataLayer', i);
+        }
+
+        var gtmId = document.querySelector('meta[name="gtm-id"]')
+          ? document.querySelector('meta[name="gtm-id"]').getAttribute('content')
+          : null;
+
+        if (consent === 'accepted' && gtmId) {
+          loadGTM(gtmId);
+        }
+
+        window.addEventListener('cookieConsentGiven', function () {
+          if (gtmId) loadGTM(gtmId);
+        });
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,397 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Kontakt — Parys Saint-Barber"
+  description="Skontaktuj się z Parys Saint-Barber. Adres, telefon, godziny otwarcia i mapa dojazdu."
+>
+  <section class="py-16 px-4 max-w-7xl mx-auto">
+
+    <!-- Page Header -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold mb-3">Kontakt</h1>
+      <p class="text-gray-600 dark:text-gray-400 text-lg">Znajdź nas i umów wizytę</p>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="contact-grid">
+
+      <!-- LEFT COLUMN: Info Cards -->
+      <div class="cards-column">
+
+        <!-- Address Card -->
+        <article class="contact-card" aria-label="Adres">
+          <div class="card-icon-wrap card-icon--red">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="22" height="22" aria-hidden="true">
+              <path fill-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-2.013 3.713-4.912 3.713-8.227a8.25 8.25 0 00-16.5 0c0 3.315 1.77 6.214 3.713 8.227a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.144.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="card-content">
+            <h2 class="card-title">Adres</h2>
+            <p class="card-main">ul. Przykładowa 12, 00-001 Warszawa</p>
+            <p class="card-sub">Wejście od strony ulicy</p>
+          </div>
+        </article>
+
+        <!-- Phone Card -->
+        <article class="contact-card" aria-label="Telefon">
+          <div class="card-icon-wrap card-icon--gold">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="22" height="22" aria-hidden="true">
+              <path fill-rule="evenodd" d="M1.5 4.5a3 3 0 013-3h1.372c.86 0 1.61.586 1.819 1.42l1.105 4.423a1.875 1.875 0 01-.694 1.955l-1.293.97c-.135.101-.164.249-.126.352a11.285 11.285 0 006.697 6.697c.103.038.25.009.352-.126l.97-1.293a1.875 1.875 0 011.955-.694l4.423 1.105c.834.209 1.42.959 1.42 1.82V19.5a3 3 0 01-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="card-content">
+            <h2 class="card-title">Telefon</h2>
+            <p class="card-main">
+              <a href="tel:+48123456789" class="contact-link" aria-label="Zadzwoń pod numer +48 123 456 789">+48 123 456 789</a>
+            </p>
+            <p class="card-sub">Pon–Sob: 9:00–20:00</p>
+          </div>
+        </article>
+
+        <!-- Email Card -->
+        <article class="contact-card" aria-label="Email">
+          <div class="card-icon-wrap card-icon--red">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="22" height="22" aria-hidden="true">
+              <path d="M1.5 8.67v8.58a3 3 0 003 3h15a3 3 0 003-3V8.67l-8.928 5.493a3 3 0 01-3.144 0L1.5 8.67z" />
+              <path d="M22.5 6.908V6.75a3 3 0 00-3-3h-15a3 3 0 00-3 3v.158l9.714 5.978a1.5 1.5 0 001.572 0L22.5 6.908z" />
+            </svg>
+          </div>
+          <div class="card-content">
+            <h2 class="card-title">Email</h2>
+            <p class="card-main">
+              <a href="mailto:kontakt@parysbarber.pl" class="contact-link" aria-label="Napisz na adres kontakt@parysbarber.pl">kontakt@parysbarber.pl</a>
+            </p>
+          </div>
+        </article>
+
+        <!-- Social Media Card -->
+        <article class="contact-card" aria-label="Social media">
+          <div class="card-icon-wrap card-icon--gold">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="22" height="22" aria-hidden="true">
+              <path d="M11.999 7.377a4.623 4.623 0 100 9.248 4.623 4.623 0 000-9.248zm0 7.627a3.004 3.004 0 110-6.008 3.004 3.004 0 010 6.008z"/>
+              <circle cx="16.806" cy="7.207" r="1.078"/>
+              <path d="M20.533 6.111A4.605 4.605 0 0017.9 3.479a6.606 6.606 0 00-2.186-.42c-.963-.042-1.268-.054-3.71-.054s-2.755 0-3.71.054a6.554 6.554 0 00-2.184.42 4.6 4.6 0 00-2.633 2.632 6.585 6.585 0 00-.419 2.186c-.043.962-.056 1.267-.056 3.71 0 2.442 0 2.753.056 3.71.015.748.156 1.486.419 2.187a4.61 4.61 0 002.634 2.632 6.584 6.584 0 002.185.45c.963.042 1.268.055 3.71.055s2.755 0 3.71-.055a6.615 6.615 0 002.186-.419 4.613 4.613 0 002.633-2.633c.263-.7.404-1.438.419-2.186.043-.962.056-1.267.056-3.71s0-2.753-.056-3.71a6.581 6.581 0 00-.421-2.217zm-1.218 9.532a5.043 5.043 0 01-.311 1.688 2.987 2.987 0 01-1.712 1.711 4.985 4.985 0 01-1.67.311c-.95.044-1.218.055-3.654.055-2.438 0-2.687 0-3.655-.055a4.96 4.96 0 01-1.669-.311 2.985 2.985 0 01-1.719-1.711 5.08 5.08 0 01-.311-1.669c-.043-.95-.053-1.218-.053-3.654 0-2.437 0-2.686.053-3.655a5.038 5.038 0 01.311-1.687c.305-.789.93-1.41 1.719-1.712a5.01 5.01 0 011.669-.311c.951-.043 1.218-.055 3.655-.055s2.687 0 3.654.055a4.96 4.96 0 011.67.311 2.991 2.991 0 011.712 1.712 5.08 5.08 0 01.311 1.669c.043.951.054 1.218.054 3.655 0 2.436 0 2.698-.043 3.654h-.011z"/>
+            </svg>
+          </div>
+          <div class="card-content">
+            <h2 class="card-title">Social Media</h2>
+            <div class="social-links">
+              <a
+                href="https://instagram.com/paryssaintbarber"
+                class="social-link"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Obserwuj nas na Instagramie @paryssaintbarber"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true">
+                  <path d="M11.999 7.377a4.623 4.623 0 100 9.248 4.623 4.623 0 000-9.248zm0 7.627a3.004 3.004 0 110-6.008 3.004 3.004 0 010 6.008z"/>
+                  <circle cx="16.806" cy="7.207" r="1.078"/>
+                  <path d="M20.533 6.111A4.605 4.605 0 0017.9 3.479a6.606 6.606 0 00-2.186-.42c-.963-.042-1.268-.054-3.71-.054s-2.755 0-3.71.054a6.554 6.554 0 00-2.184.42 4.6 4.6 0 00-2.633 2.632 6.585 6.585 0 00-.419 2.186c-.043.962-.056 1.267-.056 3.71 0 2.442 0 2.753.056 3.71.015.748.156 1.486.419 2.187a4.61 4.61 0 002.634 2.632 6.584 6.584 0 002.185.45c.963.042 1.268.055 3.71.055s2.755 0 3.71-.055a6.615 6.615 0 002.186-.419 4.613 4.613 0 002.633-2.633c.263-.7.404-1.438.419-2.186.043-.962.056-1.267.056-3.71s0-2.753-.056-3.71a6.581 6.581 0 00-.421-2.217zm-1.218 9.532a5.043 5.043 0 01-.311 1.688 2.987 2.987 0 01-1.712 1.711 4.985 4.985 0 01-1.67.311c-.95.044-1.218.055-3.654.055-2.438 0-2.687 0-3.655-.055a4.96 4.96 0 01-1.669-.311 2.985 2.985 0 01-1.719-1.711 5.08 5.08 0 01-.311-1.669c-.043-.95-.053-1.218-.053-3.654 0-2.437 0-2.686.053-3.655a5.038 5.038 0 01.311-1.687c.305-.789.93-1.41 1.719-1.712a5.01 5.01 0 011.669-.311c.951-.043 1.218-.055 3.655-.055s2.687 0 3.654.055a4.96 4.96 0 011.67.311 2.991 2.991 0 011.712 1.712 5.08 5.08 0 01.311 1.669c.043.951.054 1.218.054 3.655 0 2.436 0 2.698-.043 3.654h-.011z"/>
+                </svg>
+                @paryssaintbarber
+              </a>
+              <a
+                href="https://facebook.com/paryssaintbarber"
+                class="social-link"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Odwiedź nasz profil na Facebooku"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                </svg>
+                Facebook
+              </a>
+            </div>
+          </div>
+        </article>
+
+        <!-- Opening Hours Card -->
+        <article class="contact-card" aria-label="Godziny otwarcia">
+          <div class="card-icon-wrap card-icon--gold">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="22" height="22" aria-hidden="true">
+              <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-3.75V6z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="card-content">
+            <h2 class="card-title">Godziny otwarcia</h2>
+            <table class="hours-table" aria-label="Godziny otwarcia salonu">
+              <tbody>
+                <tr>
+                  <td class="hours-day">Poniedziałek – Piątek</td>
+                  <td class="hours-time">9:00 – 20:00</td>
+                </tr>
+                <tr>
+                  <td class="hours-day">Sobota</td>
+                  <td class="hours-time">9:00 – 18:00</td>
+                </tr>
+                <tr class="hours-closed">
+                  <td class="hours-day">Niedziela</td>
+                  <td class="hours-time">Nieczynne</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+      </div><!-- /cards-column -->
+
+      <!-- RIGHT COLUMN: Map -->
+      <div class="map-column">
+        <div class="map-wrapper" aria-label="Mapa dojazdu do Parys Saint-Barber">
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d9784.456!2d21.0122!3d52.2297!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTLCsDEzJzQ2LjkiTiAyMcKwMDAnNDMuOSJF!5e0!3m2!1spl!2spl!4v1234567890"
+            width="100%"
+            height="100%"
+            style="border:0;"
+            allowfullscreen=""
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            title="Mapa — Parys Saint-Barber, Warszawa"
+          ></iframe>
+        </div>
+      </div>
+
+    </div><!-- /contact-grid -->
+  </section>
+</BaseLayout>
+
+<style>
+  /* Grid layout */
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+
+    @media (min-width: 1024px) {
+      grid-template-columns: 1fr 1fr;
+      align-items: start;
+    }
+  }
+
+  .cards-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  /* Contact Card base */
+  .contact-card {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-left: 3px solid var(--color-accent-gold);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    transition: box-shadow 0.2s;
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    :global(.dark) & {
+      background-color: var(--color-bg-surface-dark);
+      border-color: rgba(206, 171, 93, 0.2);
+      border-left-color: var(--color-accent-gold);
+    }
+  }
+
+  /* Icon wrapper */
+  .card-icon-wrap {
+    flex-shrink: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card-icon--red {
+    background-color: rgba(218, 41, 28, 0.1);
+    color: var(--color-accent-red);
+
+    :global(.dark) & {
+      background-color: rgba(218, 41, 28, 0.15);
+    }
+  }
+
+  .card-icon--gold {
+    background-color: rgba(206, 171, 93, 0.12);
+    color: var(--color-accent-gold);
+
+    :global(.dark) & {
+      background-color: rgba(206, 171, 93, 0.18);
+    }
+  }
+
+  /* Card content */
+  .card-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .card-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #6b7280;
+    margin-bottom: 0.35rem;
+    font-family: 'Inter', sans-serif;
+
+    :global(.dark) & {
+      color: #9ca3af;
+    }
+  }
+
+  .card-main {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #111827;
+    line-height: 1.5;
+
+    :global(.dark) & {
+      color: var(--color-text-dark);
+    }
+  }
+
+  .card-sub {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+
+    :global(.dark) & {
+      color: #9ca3af;
+    }
+  }
+
+  /* Contact links */
+  .contact-link {
+    color: #111827;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+
+    &:hover {
+      color: var(--color-accent-gold);
+    }
+
+    :global(.dark) & {
+      color: var(--color-text-dark);
+
+      &:hover {
+        color: var(--color-accent-gold);
+      }
+    }
+  }
+
+  /* Social links */
+  .social-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+  }
+
+  .social-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: #111827;
+    text-decoration: none;
+    transition: color 0.2s;
+
+    &:hover {
+      color: var(--color-accent-gold);
+    }
+
+    :global(.dark) & {
+      color: var(--color-text-dark);
+
+      &:hover {
+        color: var(--color-accent-gold);
+      }
+    }
+  }
+
+  /* Hours table */
+  .hours-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.25rem;
+
+    & td {
+      padding: 0.375rem 0;
+      font-size: 0.9375rem;
+      vertical-align: top;
+    }
+  }
+
+  .hours-day {
+    color: #374151;
+    padding-right: 1rem;
+    width: 60%;
+
+    :global(.dark) & {
+      color: var(--color-text-dark);
+    }
+  }
+
+  .hours-time {
+    color: #374151;
+    font-weight: 500;
+    white-space: nowrap;
+
+    :global(.dark) & {
+      color: var(--color-text-dark);
+    }
+  }
+
+  .hours-closed .hours-day,
+  .hours-closed .hours-time {
+    color: #9ca3af;
+
+    :global(.dark) & {
+      color: #6b7280;
+    }
+  }
+
+  /* Map */
+  .map-column {
+    position: sticky;
+    top: 2rem;
+  }
+
+  .map-wrapper {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    min-height: 320px;
+
+    @media (min-width: 1024px) {
+      aspect-ratio: auto;
+      height: 540px;
+    }
+
+    :global(.dark) & {
+      border-color: rgba(206, 171, 93, 0.2);
+    }
+
+    & iframe {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  }
+</style>

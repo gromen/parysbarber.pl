@@ -1,0 +1,34 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import GalleryGrid from '../components/GalleryGrid.astro';
+import Lightbox from '../components/Lightbox.astro';
+
+const images = [
+  { src: 'https://picsum.photos/seed/barber1/600/750',  thumb: 'https://picsum.photos/seed/barber1/400/500',  alt: 'Realizacja 1',  width: 600, height: 750 },
+  { src: 'https://picsum.photos/seed/barber2/600/750',  thumb: 'https://picsum.photos/seed/barber2/400/500',  alt: 'Realizacja 2',  width: 600, height: 750 },
+  { src: 'https://picsum.photos/seed/barber3/600/750',  thumb: 'https://picsum.photos/seed/barber3/400/500',  alt: 'Realizacja 3',  width: 600, height: 750 },
+  { src: 'https://picsum.photos/seed/barber4/600/750',  thumb: 'https://picsum.photos/seed/barber4/400/500',  alt: 'Realizacja 4',  width: 600, height: 750 },
+  { src: 'https://picsum.photos/seed/barber5/600/750',  thumb: 'https://picsum.photos/seed/barber5/400/500',  alt: 'Realizacja 5',  width: 600, height: 750 },
+  { src: 'https://picsum.photos/seed/barber6/600/750',  thumb: 'https://picsum.photos/seed/barber6/400/500',  alt: 'Realizacja 6',  width: 600, height: 750 },
+  { src: 'https://picsum.photos/seed/barber7/600/750',  thumb: 'https://picsum.photos/seed/barber7/400/500',  alt: 'Realizacja 7',  width: 600, height: 750 },
+  { src: 'https://picsum.photos/seed/barber8/600/750',  thumb: 'https://picsum.photos/seed/barber8/400/500',  alt: 'Realizacja 8',  width: 600, height: 750 },
+  { src: 'https://picsum.photos/seed/barber9/600/750',  thumb: 'https://picsum.photos/seed/barber9/400/500',  alt: 'Realizacja 9',  width: 600, height: 750 },
+  { src: 'https://picsum.photos/seed/barber10/600/750', thumb: 'https://picsum.photos/seed/barber10/400/500', alt: 'Realizacja 10', width: 600, height: 750 },
+  { src: 'https://picsum.photos/seed/barber11/600/750', thumb: 'https://picsum.photos/seed/barber11/400/500', alt: 'Realizacja 11', width: 600, height: 750 },
+  { src: 'https://picsum.photos/seed/barber12/600/750', thumb: 'https://picsum.photos/seed/barber12/400/500', alt: 'Realizacja 12', width: 600, height: 750 },
+];
+---
+
+<BaseLayout
+  title="Realizacje — Parys Saint-Barber"
+  description="Galeria prac Parys Saint-Barber. Nasze strzyżenia i stylizacje mówią same za siebie."
+>
+  <section class="py-16 px-4 max-w-7xl mx-auto">
+    <h1 class="text-4xl font-bold text-center mb-4 font-playfair">Realizacje</h1>
+    <p class="text-center text-gray-600 dark:text-gray-400 mb-12">
+      Nasze prace mówią same za siebie
+    </p>
+    <GalleryGrid images={images} />
+  </section>
+  <Lightbox />
+</BaseLayout>
