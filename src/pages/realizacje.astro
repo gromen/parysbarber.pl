@@ -1,7 +1,7 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
 import GalleryGrid from '../components/GalleryGrid.astro';
 import Lightbox from '../components/Lightbox.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
 
 const images = [
   { src: 'https://picsum.photos/seed/barber1/600/750',  thumb: 'https://picsum.photos/seed/barber1/400/500',  alt: 'Realizacja 1',  width: 600, height: 750 },
@@ -23,12 +23,90 @@ const images = [
   title="Realizacje — Parys Saint-Barber"
   description="Galeria prac Parys Saint-Barber. Nasze strzyżenia i stylizacje mówią same za siebie."
 >
-  <section class="py-16 px-4 max-w-7xl mx-auto">
+<section class="reels-section">
+    <div class="reels-inner">
     <h1 class="text-4xl font-bold text-center mb-4 font-playfair">Realizacje</h1>
+
+      <p class="reels-subheading">Obejrzyj nas w akcji</p>
+      <div class="reels-grid">
+        <div class="reel-wrapper">
+          <div set:html={`<iframe title="Facebook Reel — Parys Saint-Barber"  src="https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2Freel%2F932159692544955%2F&show_text=false&width=267&t=0" width="267" height="476" style="border:none;overflow:hidden;position:absolute;inset:0;width:100%;height:100%;" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>`} />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-16 px-4 max-w-7xl mx-auto hidden">
+    <h2 class="text-4xl font-bold text-center mb-4 font-playfair">Galeria</h2>
     <p class="text-center text-gray-600 dark:text-gray-400 mb-12">
       Nasze prace mówią same za siebie
     </p>
     <GalleryGrid images={images} />
   </section>
+
   <Lightbox />
 </BaseLayout>
+
+<style>
+  .reels-section {
+    padding: 3rem 1rem;
+
+    & .reels-inner {
+      max-width: 80rem;
+      margin-inline: auto;
+    }
+
+    & .reels-heading {
+      font-size: 1.75rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    & .reels-subheading {
+      text-align: center;
+      color: #6b7280;
+      margin-bottom: 2.5rem;
+
+      @media (prefers-color-scheme: dark) {
+        color: #9ca3af;
+      }
+    }
+
+    & .reels-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1.5rem;
+    }
+
+    & .reel-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 267px;
+      aspect-ratio: 267 / 476;
+      overflow: hidden;
+    }
+
+    @media (min-width: 640px) {
+      padding: 4rem 2rem;
+
+      & .reels-heading {
+        font-size: 2rem;
+      }
+
+      & .reel-wrapper {
+        width: 267px;
+        height: 476px;
+        aspect-ratio: unset;
+        flex-shrink: 0;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      padding: 5rem 2rem;
+    }
+  }
+</style>
