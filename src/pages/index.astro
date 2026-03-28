@@ -150,17 +150,29 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <div class="max-w-5xl mx-auto">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16 items-center">
 
-        <!-- Image -->
+        <!-- Facebook Reel -->
         <div class="relative">
           <div class="about-img-border absolute -inset-3 rounded-sm opacity-30"></div>
-          <img
-            src="https://picsum.photos/seed/barber-about/600/700"
-            alt="Wnętrze Parys Saint-Barber — klimatyczny barber shop"
-            width="600"
-            height="700"
-            loading="lazy"
-            class="relative z-10 w-full h-auto rounded-sm object-cover shadow-2xl"
-          />
+          <div class="about-reel-wrapper">
+            <video
+              src="/reelparys.mp4"
+              poster="/reelparys-poster.jpg"
+              muted
+              loop
+              playsinline
+              preload="none"
+              class="about-reel-video"
+              aria-label="Parys Saint-Barber — rolka wideo"
+            ></video>
+            <button class="about-play-btn" aria-label="Odtwórz wideo">
+              <svg class="icon-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+              <svg class="icon-pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+              </svg>
+            </button>
+          </div>
           <!-- Gold accent bar -->
           <div class="absolute -bottom-4 -right-4 w-24 h-24 border-4 border-accent-gold rounded-sm z-0 opacity-60"></div>
         </div>
@@ -298,6 +310,57 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       background: linear-gradient(135deg, #ceab5d, #DA291C, #004170);
     }
 
+    /* ── About reel wrapper ── */
+    .about-reel-wrapper {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 360px;
+      aspect-ratio: 267 / 476;
+      margin-inline: auto;
+      overflow: hidden;
+      border-radius: 2px;
+
+      & .about-play-btn {
+        position: absolute;
+        inset: 0;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.35);
+        border: none;
+        cursor: pointer;
+        transition: background 0.2s;
+
+        & svg {
+          width: 4rem;
+          height: 4rem;
+          color: white;
+          filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+        }
+
+        & .icon-pause {
+          display: none;
+        }
+
+        &.playing {
+          background: transparent;
+
+          & .icon-play { display: none; }
+          & .icon-pause { display: block; }
+
+          &:hover {
+            background: rgba(0, 0, 0, 0.35);
+          }
+        }
+
+        &:hover {
+          background: rgba(0, 0, 0, 0.5);
+        }
+      }
+    }
+
     /* ── CTA Banner ── */
     .cta-banner {
       background-color: #001a35;
@@ -326,5 +389,23 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       opacity: 0.4;
     }
   </style>
+
+  <script>
+    const btn = document.querySelector('.about-play-btn') as HTMLButtonElement | null;
+    const video = document.querySelector('.about-reel-video') as HTMLVideoElement | null;
+    if (btn && video) {
+      btn.addEventListener('click', () => {
+        if (video.paused) {
+          video.play();
+          btn.classList.add('playing');
+          btn.setAttribute('aria-label', 'Zatrzymaj wideo');
+        } else {
+          video.pause();
+          btn.classList.remove('playing');
+          btn.setAttribute('aria-label', 'Odtwórz wideo');
+        }
+      });
+    }
+  </script>
 
 </BaseLayout>
