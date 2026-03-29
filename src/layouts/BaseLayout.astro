@@ -44,11 +44,6 @@ const ogImageURL = new URL(ogImage, Astro.site);
     <link rel="icon" href="/favicon.ico" />
     <meta name="generator" content={Astro.generator} />
 
-    <!-- GTM ID exposed to client -->
-    {import.meta.env.PUBLIC_GTM_ID && (
-      <meta name="gtm-id" content={import.meta.env.PUBLIC_GTM_ID} />
-    )}
-
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonicalURL} />
@@ -67,13 +62,15 @@ const ogImageURL = new URL(ogImage, Astro.site);
     <Footer />
     <CookieBar />
 
-    <!-- GTM consent manager -->
+    <!-- GTM — loads only after cookie consent -->
     <script is:inline>
       (function () {
-        var consent = localStorage.getItem('cookieConsent');
-        // GTM ID is read from the <meta name="gtm-id"> tag injected server-side
-        function loadGTM(id) {
-          if (!id) return;
+        var GTM_ID = 'GTM-PHMLWWVN';
+        var loaded = false;
+
+        function loadGTM() {
+          if (loaded) return;
+          loaded = true;
           (function (w, d, s, l, i) {
             w[l] = w[l] || [];
             w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
@@ -83,20 +80,14 @@ const ogImageURL = new URL(ogImage, Astro.site);
             j.async = true;
             j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
             f.parentNode.insertBefore(j, f);
-          })(window, document, 'script', 'dataLayer', id);
+          })(window, document, 'script', 'dataLayer', GTM_ID);
         }
 
-        var gtmId = document.querySelector('meta[name="gtm-id"]')
-          ? document.querySelector('meta[name="gtm-id"]').getAttribute('content')
-          : null;
-
-        if (consent === 'accepted' && gtmId) {
-          loadGTM(gtmId);
+        if (localStorage.getItem('cookieConsent') === 'accepted') {
+          loadGTM();
         }
 
-        window.addEventListener('cookieConsentGiven', function () {
-          if (gtmId) loadGTM(gtmId);
-        });
+        window.addEventListener('cookieConsentGiven', loadGTM);
       })();
     </script>
   </body>
