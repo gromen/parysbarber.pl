@@ -67,9 +67,10 @@ const ogImageURL = new URL(ogImage, Astro.site);
       (function () {
         var GTM_ID = 'GTM-PHMLWWVN';
         var loaded = false;
+        var isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 
         function loadGTM() {
-          if (loaded) return;
+          if (loaded || isLocal) return;
           loaded = true;
           (function (w, d, s, l, i) {
             w[l] = w[l] || [];
