@@ -83,7 +83,7 @@ const ogImageURL = new URL(ogImage, Astro.site);
             j.async = true;
             j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
             f.parentNode.insertBefore(j, f);
-          })(w, d, 'script', 'dataLayer', i);
+          })(window, document, 'script', 'dataLayer', id);
         }
 
         var gtmId = document.querySelector('meta[name="gtm-id"]')
