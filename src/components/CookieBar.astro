@@ -61,7 +61,10 @@
     const consent = localStorage.getItem('cookieConsent');
 
     if (consent === null || consent === undefined) {
-      setTimeout(showBar, 500);
+      // Delay after load event to avoid blocking LCP
+      window.addEventListener('load', () => {
+        setTimeout(showBar, 2000);
+      }, { once: true });
     }
 
     document.getElementById('cookie-accept')?.addEventListener('click', () => {

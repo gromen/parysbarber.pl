@@ -45,9 +45,6 @@ const images = [
             <svg class="icon-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M8 5v14l11-7z"/>
             </svg>
-            <svg class="icon-pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-            </svg>
           </button>
         </div>
       </div>
@@ -146,15 +143,10 @@ const images = [
           filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
         }
 
-        & .icon-pause {
-          display: none;
-        }
-
         &.playing {
           background: transparent;
 
           & .icon-play { display: none; }
-          & .icon-pause { display: block; }
 
           &:hover {
             background: rgba(0, 0, 0, 0.35);
