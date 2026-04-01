@@ -73,7 +73,7 @@ function isActive(href: string): boolean {
   <!-- Mobile menu -->
   <nav
     id="mobile-menu"
-    class="md:hidden hidden border-t border-gray-200 dark:border-bg-dark bg-white dark:bg-bg-surface-dark"
+    class="md:hidden border-t border-gray-200 dark:border-bg-dark bg-white dark:bg-bg-surface-dark"
     aria-label="Nawigacja mobilna"
   >
     <ul class="flex flex-col px-4 py-3 gap-1">
@@ -97,6 +97,45 @@ function isActive(href: string): boolean {
   </nav>
 </header>
 
+<style>
+  #mobile-menu {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: max-height 0.35s ease-in-out, opacity 0.25s ease-in-out, visibility 0.35s ease-in-out;
+  }
+
+  #mobile-menu.is-open {
+    max-height: 200px;
+    opacity: 1;
+    visibility: visible;
+  }
+
+  @keyframes slideInFromLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  #mobile-menu.is-open li:nth-child(1) {
+    animation: slideInFromLeft 0.25s ease-out 250ms both;
+  }
+
+  #mobile-menu.is-open li:nth-child(2) {
+    animation: slideInFromLeft 0.25s ease-out 320ms both;
+  }
+
+  #mobile-menu.is-open li:nth-child(3) {
+    animation: slideInFromLeft 0.25s ease-out 390ms both;
+  }
+</style>
+
 <!-- Spacer to offset fixed header -->
 <div class="h-16"></div>
 
@@ -110,7 +149,7 @@ function isActive(href: string): boolean {
 
   hamburgerBtn?.addEventListener('click', () => {
     isOpen = !isOpen;
-    mobileMenu?.classList.toggle('hidden', !isOpen);
+    mobileMenu?.classList.toggle('is-open', isOpen);
     hamburgerBtn.setAttribute('aria-expanded', String(isOpen));
     hamburgerBtn.setAttribute('aria-label', isOpen ? 'Zamknij menu' : 'Otwórz menu');
     iconHamburger?.classList.toggle('hidden', isOpen);
@@ -121,7 +160,7 @@ function isActive(href: string): boolean {
   mobileMenu?.querySelectorAll('a').forEach((link) => {
     link.addEventListener('click', () => {
       isOpen = false;
-      mobileMenu.classList.add('hidden');
+      mobileMenu.classList.remove('is-open');
       hamburgerBtn?.setAttribute('aria-expanded', 'false');
       hamburgerBtn?.setAttribute('aria-label', 'Otwórz menu');
       iconHamburger?.classList.remove('hidden');
