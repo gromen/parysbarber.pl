@@ -44,12 +44,58 @@ const ogImageURL = new URL(ogImage, Astro.site);
     <link rel="icon" href="/favicon.ico" />
     <meta name="generator" content={Astro.generator} />
 
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" />
+
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonicalURL} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:image" content={ogImageURL} />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageURL} />
+
+    <!-- LocalBusiness Schema -->
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "BarberShop",
+      "name": "Parys Saint-Barber",
+      "url": "https://parysbarber.pl",
+      "telephone": "+48696083037",
+      "email": "parysbarber@gmail.com",
+      "image": "https://parysbarber.pl/parys_logo_final.svg",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "ul. Tadeusza Kościuszki 38E/5U",
+        "addressLocality": "Ostrów Mazowiecka",
+        "postalCode": "07-300",
+        "addressCountry": "PL"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 52.33321,
+        "longitude": 20.99827
+      },
+      "openingHoursSpecification": [
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+          "opens": "09:00",
+          "closes": "18:00"
+        }
+      ],
+      "sameAs": [
+        "https://www.instagram.com/paryssaintbarber/",
+        "https://www.facebook.com/parysbarber/"
+      ]
+    })} />
   </head>
 
   <body class="bg-bg-base dark:bg-bg-dark text-gray-900 dark:text-text-dark min-h-screen flex flex-col">
