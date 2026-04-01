@@ -156,15 +156,24 @@ function isActive(href: string): boolean {
     iconClose?.classList.toggle('hidden', !isOpen);
   });
 
+  function closeMenu() {
+    isOpen = false;
+    mobileMenu?.classList.remove('is-open');
+    hamburgerBtn?.setAttribute('aria-expanded', 'false');
+    hamburgerBtn?.setAttribute('aria-label', 'Otwórz menu');
+    iconHamburger?.classList.remove('hidden');
+    iconClose?.classList.add('hidden');
+  }
+
   // Close mobile menu on link click
   mobileMenu?.querySelectorAll('a').forEach((link) => {
-    link.addEventListener('click', () => {
-      isOpen = false;
-      mobileMenu.classList.remove('is-open');
-      hamburgerBtn?.setAttribute('aria-expanded', 'false');
-      hamburgerBtn?.setAttribute('aria-label', 'Otwórz menu');
-      iconHamburger?.classList.remove('hidden');
-      iconClose?.classList.add('hidden');
-    });
+    link.addEventListener('click', closeMenu);
+  });
+
+  // Close mobile menu on outside click/tap
+  document.addEventListener('click', (e) => {
+    if (isOpen && !mobileMenu?.contains(e.target as Node) && !hamburgerBtn?.contains(e.target as Node)) {
+      closeMenu();
+    }
   });
 </script>
