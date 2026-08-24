@@ -39,11 +39,17 @@ export const POST: APIRoute = async ({ params }) => {
   }
 
   const service = await getAnyServiceById(db, cancelled.service_id);
-  await sendBarberCancellationEmail(env, {
+  const notifyResult = await sendBarberCancellationEmail(env, {
     clientName: cancelled.client_name,
     serviceName: service?.name ?? 'Usługa',
     startAtISO: cancelled.start_at,
   });
+  if (!notifyResult.sent) {
+    console.error(
+      `BARBER CANCELLATION EMAIL FAILED for appointment #${cancelled.id} ` +
+        `(${cancelled.client_name}, ${cancelled.start_at}) — barber will not know this was cancelled unless they check the panel.`
+    );
+  }
 
   return new Response(JSON.stringify({ success: true }), {
     status: 200,
