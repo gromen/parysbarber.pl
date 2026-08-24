@@ -1,0 +1,9 @@
+name = "parysbarber-pl"
+compatibility_date = "2026-08-24"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "parysbarber-bookings"
+database_id = "REPLACE_AFTER_WRANGLER_D1_CREATE"
+migrations_dir = "migrations"

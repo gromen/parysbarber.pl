@@ -1,0 +1,175 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { requireAuth } from '../../lib/auth';
+
+const authed = await requireAuth(Astro);
+if (authed) return Astro.redirect('/panel');
+---
+
+<BaseLayout title="Panel — Logowanie" description="Panel logowania dla fryzjera Parys Saint-Barber.">
+  <section class="login-section">
+    <div class="login-card">
+      <h1 class="login-title">Panel fryzjera</h1>
+      <p class="login-sub">Zaloguj się, aby zobaczyć nadchodzące wizyty</p>
+
+      <form id="login-form" class="login-form">
+        <label for="password" class="login-label">Hasło</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          class="login-input"
+          autocomplete="current-password"
+          required
+        />
+        <p id="login-error" class="login-error" role="alert" hidden>Nieprawidłowe hasło</p>
+        <button type="submit" class="login-submit">Zaloguj się</button>
+      </form>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  const form = document.getElementById('login-form') as HTMLFormElement;
+  const errorEl = document.getElementById('login-error') as HTMLParagraphElement;
+  const submitBtn = form.querySelector('.login-submit') as HTMLButtonElement;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorEl.hidden = true;
+    submitBtn.disabled = true;
+
+    const password = (document.getElementById('password') as HTMLInputElement).value;
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+
+      if (res.ok) {
+        window.location.href = '/panel';
+        return;
+      }
+
+      errorEl.hidden = false;
+    } catch {
+      errorEl.hidden = false;
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+</script>
+
+<style>
+  .login-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 4rem);
+    padding: 2rem 1rem;
+  }
+
+  .login-card {
+    width: 100%;
+    max-width: 24rem;
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-left: 3px solid var(--color-accent-gold);
+    border-radius: 0.75rem;
+    padding: 2rem 1.5rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+
+    :global(.dark) & {
+      background-color: var(--color-bg-surface-dark);
+      border-color: rgba(206, 171, 93, 0.2);
+      border-left-color: var(--color-accent-gold);
+    }
+  }
+
+  .login-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: #111827;
+
+    :global(.dark) & {
+      color: var(--color-text-dark);
+    }
+  }
+
+  .login-sub {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 1.5rem;
+
+    :global(.dark) & {
+      color: #9ca3af;
+    }
+  }
+
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .login-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #6b7280;
+
+    :global(.dark) & {
+      color: #9ca3af;
+    }
+  }
+
+  .login-input {
+    padding: 0.625rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    background-color: #ffffff;
+    color: #111827;
+
+    &:focus {
+      outline: 2px solid var(--color-accent-gold);
+      outline-offset: 1px;
+    }
+
+    :global(.dark) & {
+      background-color: var(--color-bg-dark);
+      border-color: rgba(206, 171, 93, 0.2);
+      color: var(--color-text-dark);
+    }
+  }
+
+  .login-error {
+    color: var(--color-accent-red);
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  .login-submit {
+    margin-top: 0.5rem;
+    padding: 0.625rem 1rem;
+    background-color: var(--color-accent-gold);
+    color: #111827;
+    font-weight: 600;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+
+    &:hover {
+      opacity: 0.9;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+</style>

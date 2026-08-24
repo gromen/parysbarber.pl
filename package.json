@@ -9,14 +9,20 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "cf-typegen": "wrangler types"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.8",
+    "@astrojs/cloudflare": "^13.5.0",
     "@astrojs/sitemap": "^3.7.1",
     "@tailwindcss/vite": "^4.2.2",
     "astro": "^6.0.8",
+    "resend": "^6.22.0",
     "tailwindcss": "^4.2.2",
     "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "wrangler": "^4.125.0"
   }
 }

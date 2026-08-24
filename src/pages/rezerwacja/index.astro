@@ -1,0 +1,608 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Rezerwacja — Parys Saint-Barber"
+  description="Zarezerwuj wizytę online w Parys Saint-Barber. Wybierz usługę, termin i godzinę w kilku prostych krokach."
+>
+  <section class="py-16 px-4 max-w-3xl mx-auto">
+    <div class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold mb-3">Rezerwacja wizyty</h1>
+      <p class="text-gray-600 dark:text-gray-400 text-lg">Umów się online w kilku krokach</p>
+    </div>
+
+    <div id="booking-app" class="booking-card" aria-live="polite">
+      <!-- Step 1: service -->
+      <div id="step-service" class="booking-step">
+        <h2 class="step-title">1. Wybierz usługę</h2>
+        <div id="services-list" class="services-list">
+          <p class="loading-text">Ładowanie usług…</p>
+        </div>
+      </div>
+
+      <!-- Step 2: date -->
+      <div id="step-date" class="booking-step is-disabled">
+        <h2 class="step-title">2. Wybierz dzień</h2>
+        <label for="date-input" class="field-label">Data wizyty</label>
+        <input type="date" id="date-input" class="date-input" disabled />
+      </div>
+
+      <!-- Step 3: slots -->
+      <div id="step-slots" class="booking-step is-disabled">
+        <h2 class="step-title">3. Wybierz godzinę</h2>
+        <div id="slots-list" class="slots-list"></div>
+      </div>
+
+      <!-- Step 4: contact form -->
+      <div id="step-contact" class="booking-step is-disabled">
+        <h2 class="step-title">4. Twoje dane</h2>
+        <form id="contact-form" class="contact-form">
+          <div class="form-field">
+            <label for="clientName">Imię i nazwisko</label>
+            <input type="text" id="clientName" name="clientName" required minlength="2" autocomplete="name" />
+          </div>
+          <div class="form-field">
+            <label for="clientPhone">Telefon</label>
+            <input type="tel" id="clientPhone" name="clientPhone" required pattern="[\\d+\\s()\\-]{7,20}" autocomplete="tel" />
+          </div>
+          <div class="form-field">
+            <label for="clientEmail">E-mail</label>
+            <input type="email" id="clientEmail" name="clientEmail" required autocomplete="email" />
+          </div>
+          <div id="form-message" class="form-message" role="alert"></div>
+          <button type="submit" id="submit-btn" class="submit-btn">Zarezerwuj wizytę</button>
+        </form>
+      </div>
+
+      <!-- Confirmation -->
+      <div id="step-confirmation" class="booking-step is-hidden" aria-live="polite">
+        <div class="confirmation">
+          <div class="confirmation-icon" aria-hidden="true">✓</div>
+          <h2 class="confirmation-title">Wizyta zarezerwowana!</h2>
+          <p id="confirmation-summary" class="confirmation-summary"></p>
+          <p class="confirmation-note">
+            Potwierdzenie wysłaliśmy na Twój e-mail — znajdziesz tam link do anulowania wizyty.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style is:global>
+  /* Global: service/slot buttons are created client-side via document.createElement,
+     so they never get Astro's scope attribute — a scoped <style> here would silently
+     not apply to any of them. */
+  .booking-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .booking-step {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-left: 3px solid var(--color-accent-gold);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    transition: opacity 0.2s;
+
+    :global(.dark) & {
+      background-color: var(--color-bg-surface-dark);
+      border-color: rgba(206, 171, 93, 0.2);
+      border-left-color: var(--color-accent-gold);
+    }
+
+    &.is-disabled {
+      opacity: 0.45;
+      pointer-events: none;
+    }
+
+    &.is-hidden {
+      display: none;
+    }
+  }
+
+  .step-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #6b7280;
+    margin-bottom: 1rem;
+    font-family: 'Inter', sans-serif;
+
+    :global(.dark) & {
+      color: #9ca3af;
+    }
+  }
+
+  .loading-text {
+    color: #6b7280;
+    font-size: 0.9375rem;
+
+    :global(.dark) & {
+      color: #9ca3af;
+    }
+  }
+
+  /* Services */
+  .services-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .service-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
+    text-align: left;
+    padding: 0.875rem 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    background: none;
+    cursor: pointer;
+    font-family: inherit;
+    color: #111827;
+    transition: border-color 0.2s, background-color 0.2s;
+
+    :global(.dark) & {
+      border-color: rgba(206, 171, 93, 0.2);
+      color: var(--color-text-dark);
+    }
+
+    &:hover {
+      border-color: var(--color-accent-gold);
+    }
+
+    &.is-selected {
+      border-color: var(--color-accent-gold);
+      background-color: rgba(206, 171, 93, 0.1);
+
+      :global(.dark) & {
+        background-color: rgba(206, 171, 93, 0.15);
+      }
+    }
+  }
+
+  .service-name {
+    font-weight: 500;
+  }
+
+  .service-duration {
+    font-size: 0.875rem;
+    color: #6b7280;
+    white-space: nowrap;
+
+    :global(.dark) & {
+      color: #9ca3af;
+    }
+  }
+
+  /* Date */
+  .field-label {
+    display: block;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: #111827;
+
+    :global(.dark) & {
+      color: var(--color-text-dark);
+    }
+  }
+
+  .date-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    background-color: #ffffff;
+    color: #111827;
+    font-family: inherit;
+    font-size: 1rem;
+
+    :global(.dark) & {
+      background-color: var(--color-bg-dark);
+      border-color: rgba(206, 171, 93, 0.2);
+      color: var(--color-text-dark);
+    }
+
+    &:focus {
+      outline: 2px solid var(--color-accent-gold);
+      outline-offset: 1px;
+    }
+  }
+
+  /* Slots */
+  .slots-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+
+    @media (min-width: 480px) {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  .slot-btn {
+    padding: 0.625rem 0.5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    background: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.9375rem;
+    color: #111827;
+    transition: border-color 0.2s, background-color 0.2s;
+
+    :global(.dark) & {
+      border-color: rgba(206, 171, 93, 0.2);
+      color: var(--color-text-dark);
+    }
+
+    &:hover {
+      border-color: var(--color-accent-gold);
+    }
+
+    &.is-selected {
+      border-color: var(--color-accent-gold);
+      background-color: rgba(206, 171, 93, 0.15);
+      font-weight: 600;
+    }
+  }
+
+  .slots-empty {
+    grid-column: 1 / -1;
+    color: #6b7280;
+    font-size: 0.9375rem;
+
+    :global(.dark) & {
+      color: #9ca3af;
+    }
+  }
+
+  /* Contact form */
+  .contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+
+    & label {
+      font-size: 0.9375rem;
+      font-weight: 500;
+      color: #111827;
+
+      :global(.dark) & {
+        color: var(--color-text-dark);
+      }
+    }
+
+    & input {
+      padding: 0.75rem 1rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+      background-color: #ffffff;
+      color: #111827;
+      font-family: inherit;
+      font-size: 1rem;
+
+      :global(.dark) & {
+        background-color: var(--color-bg-dark);
+        border-color: rgba(206, 171, 93, 0.2);
+        color: var(--color-text-dark);
+      }
+
+      &:focus {
+        outline: 2px solid var(--color-accent-gold);
+        outline-offset: 1px;
+      }
+    }
+  }
+
+  .form-message {
+    font-size: 0.9375rem;
+    min-height: 1.25rem;
+
+    &.is-error {
+      color: var(--color-accent-red);
+    }
+  }
+
+  .submit-btn {
+    padding: 0.875rem 1.5rem;
+    border-radius: 0.5rem;
+    border: none;
+    background-color: var(--color-accent-red);
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s, opacity 0.2s;
+
+    &:hover:not(:disabled) {
+      background-color: #b8221a;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  /* Confirmation */
+  .confirmation {
+    text-align: center;
+    padding: 1rem 0;
+  }
+
+  .confirmation-icon {
+    width: 3.5rem;
+    height: 3.5rem;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #16a34a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    font-weight: 700;
+  }
+
+  .confirmation-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    color: #111827;
+
+    :global(.dark) & {
+      color: var(--color-text-dark);
+    }
+  }
+
+  .confirmation-summary {
+    font-size: 1.0625rem;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+    color: #111827;
+
+    :global(.dark) & {
+      color: var(--color-text-dark);
+    }
+  }
+
+  .confirmation-note {
+    font-size: 0.9375rem;
+    color: #6b7280;
+
+    :global(.dark) & {
+      color: #9ca3af;
+    }
+  }
+</style>
+
+<script>
+  interface Service {
+    id: number;
+    name: string;
+    durationMinutes: number;
+  }
+
+  const servicesListEl = document.getElementById('services-list') as HTMLDivElement;
+  const stepDateEl = document.getElementById('step-date') as HTMLDivElement;
+  const stepSlotsEl = document.getElementById('step-slots') as HTMLDivElement;
+  const stepContactEl = document.getElementById('step-contact') as HTMLDivElement;
+  const stepConfirmationEl = document.getElementById('step-confirmation') as HTMLDivElement;
+  const dateInput = document.getElementById('date-input') as HTMLInputElement;
+  const slotsListEl = document.getElementById('slots-list') as HTMLDivElement;
+  const contactForm = document.getElementById('contact-form') as HTMLFormElement;
+  const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
+  const formMessageEl = document.getElementById('form-message') as HTMLDivElement;
+  const confirmationSummaryEl = document.getElementById('confirmation-summary') as HTMLParagraphElement;
+
+  let selectedService: Service | null = null;
+  let selectedDate = '';
+  let selectedTime = '';
+
+  const today = new Date();
+  const maxDate = new Date();
+  maxDate.setDate(today.getDate() + 30);
+  dateInput.min = today.toISOString().slice(0, 10);
+  dateInput.max = maxDate.toISOString().slice(0, 10);
+
+  async function loadServices() {
+    try {
+      const res = await fetch('/api/services');
+      if (!res.ok) throw new Error('failed');
+      const data: { services: Service[] } = await res.json();
+      renderServices(data.services);
+    } catch {
+      servicesListEl.innerHTML = '<p class="loading-text">Nie udało się załadować usług. Odśwież stronę.</p>';
+    }
+  }
+
+  function renderServices(services: Service[]) {
+    if (services.length === 0) {
+      servicesListEl.innerHTML = '<p class="loading-text">Brak dostępnych usług.</p>';
+      return;
+    }
+    servicesListEl.innerHTML = '';
+    services.forEach((service) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'service-option';
+      btn.dataset.serviceId = String(service.id);
+      btn.innerHTML = `<span class="service-name">${escapeHtml(service.name)}</span><span class="service-duration">${service.durationMinutes} min</span>`;
+      btn.setAttribute('aria-label', `Wybierz usługę: ${service.name} (${service.durationMinutes} min)`);
+      btn.addEventListener('click', () => selectService(service, btn));
+      servicesListEl.appendChild(btn);
+    });
+  }
+
+  function selectService(service: Service, btn: HTMLButtonElement) {
+    selectedService = service;
+    document.querySelectorAll('.service-option').forEach((el) => el.classList.remove('is-selected'));
+    btn.classList.add('is-selected');
+    stepDateEl.classList.remove('is-disabled');
+    dateInput.disabled = false;
+    resetSlots();
+    if (selectedDate) fetchSlots();
+  }
+
+  dateInput.addEventListener('change', () => {
+    selectedDate = dateInput.value;
+    resetContact();
+    if (selectedDate && selectedService) {
+      fetchSlots();
+    }
+  });
+
+  function resetSlots() {
+    selectedTime = '';
+    stepSlotsEl.classList.add('is-disabled');
+    slotsListEl.innerHTML = '';
+    resetContact();
+  }
+
+  function resetContact() {
+    stepContactEl.classList.add('is-disabled');
+    formMessageEl.textContent = '';
+    formMessageEl.classList.remove('is-error');
+  }
+
+  async function fetchSlots() {
+    if (!selectedService || !selectedDate) return;
+    stepSlotsEl.classList.remove('is-disabled');
+    slotsListEl.innerHTML = '<p class="loading-text">Ładowanie terminów…</p>';
+    try {
+      const res = await fetch(`/api/bookings/slots?serviceId=${selectedService.id}&date=${selectedDate}`);
+      if (!res.ok) throw new Error('failed');
+      const data: { slots: string[] } = await res.json();
+      renderSlots(data.slots);
+    } catch {
+      slotsListEl.innerHTML = '<p class="slots-empty">Nie udało się załadować terminów. Spróbuj ponownie.</p>';
+    }
+  }
+
+  function renderSlots(slots: string[]) {
+    if (slots.length === 0) {
+      slotsListEl.innerHTML = '<p class="slots-empty">Brak wolnych terminów tego dnia — wybierz inny dzień.</p>';
+      return;
+    }
+    slotsListEl.innerHTML = '';
+    slots.forEach((slot) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'slot-btn';
+      btn.textContent = slot;
+      btn.setAttribute('aria-label', `Zarezerwuj o godzinie ${slot}`);
+      btn.addEventListener('click', () => selectSlot(slot, btn));
+      slotsListEl.appendChild(btn);
+    });
+  }
+
+  function selectSlot(slot: string, btn: HTMLButtonElement) {
+    selectedTime = slot;
+    document.querySelectorAll('.slot-btn').forEach((el) => el.classList.remove('is-selected'));
+    btn.classList.add('is-selected');
+    stepContactEl.classList.remove('is-disabled');
+    formMessageEl.textContent = '';
+    formMessageEl.classList.remove('is-error');
+  }
+
+  function escapeHtml(str: string): string {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  contactForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!selectedService || !selectedDate || !selectedTime) return;
+
+    formMessageEl.textContent = '';
+    formMessageEl.classList.remove('is-error');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Wysyłanie…';
+
+    const formData = new FormData(contactForm);
+    const body = {
+      serviceId: selectedService.id,
+      date: selectedDate,
+      time: selectedTime,
+      clientName: String(formData.get('clientName') ?? '').trim(),
+      clientPhone: String(formData.get('clientPhone') ?? '').trim(),
+      clientEmail: String(formData.get('clientEmail') ?? '').trim(),
+    };
+
+    try {
+      const res = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (res.status === 201) {
+        const data: { cancelToken: string; startAtISO: string; serviceName: string } = await res.json();
+        showConfirmation(data);
+        return;
+      }
+
+      const errorData = (await res.json().catch(() => ({}))) as { error?: string };
+
+      if (res.status === 409 && errorData.error === 'slot_taken') {
+        formMessageEl.textContent = 'Ten termin został właśnie zajęty. Wybierz inną godzinę.';
+        formMessageEl.classList.add('is-error');
+        selectedTime = '';
+        stepContactEl.classList.add('is-disabled');
+        try {
+          await fetchSlots();
+        } catch {
+          slotsListEl.innerHTML = '<p class="slots-empty">Nie udało się odświeżyć terminów. Odśwież stronę i spróbuj ponownie.</p>';
+        }
+      } else if (res.status === 429) {
+        formMessageEl.textContent = 'Masz już zbyt wiele nadchodzących rezerwacji na ten adres e-mail.';
+        formMessageEl.classList.add('is-error');
+      } else {
+        formMessageEl.textContent = 'Wystąpił błąd podczas rezerwacji. Spróbuj ponownie.';
+        formMessageEl.classList.add('is-error');
+      }
+    } catch {
+      formMessageEl.textContent = 'Wystąpił błąd połączenia. Spróbuj ponownie.';
+      formMessageEl.classList.add('is-error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Zarezerwuj wizytę';
+    }
+  });
+
+  function showConfirmation(data: { startAtISO: string; serviceName: string }) {
+    const formatted = new Intl.DateTimeFormat('pl-PL', {
+      timeZone: 'Europe/Warsaw',
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(data.startAtISO));
+
+    confirmationSummaryEl.textContent = `${data.serviceName} — ${formatted}`;
+
+    document.querySelectorAll('.booking-step').forEach((el) => el.classList.add('is-hidden'));
+    stepConfirmationEl.classList.remove('is-hidden');
+  }
+
+  loadServices();
+</script>

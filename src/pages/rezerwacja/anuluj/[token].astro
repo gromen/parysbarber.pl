@@ -1,0 +1,272 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+
+const { token } = Astro.params;
+
+interface TokenResponse {
+  clientName: string;
+  serviceName: string | null;
+  startAtISO: string;
+  status: 'confirmed' | 'cancelled';
+}
+
+let appointment: TokenResponse | null = null;
+let notFound = false;
+let fetchError = false;
+
+if (token) {
+  try {
+    const apiUrl = new URL(`/api/bookings/token/${encodeURIComponent(token)}`, Astro.url.origin);
+    const res = await fetch(apiUrl);
+    if (res.ok) {
+      appointment = (await res.json()) as TokenResponse;
+    } else {
+      notFound = true;
+    }
+  } catch {
+    fetchError = true;
+  }
+} else {
+  notFound = true;
+}
+
+const formattedDate = appointment
+  ? new Intl.DateTimeFormat('pl-PL', {
+      timeZone: 'Europe/Warsaw',
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(appointment.startAtISO))
+  : '';
+---
+
+<BaseLayout
+  title="Anulowanie wizyty — Parys Saint-Barber"
+  description="Anuluj swoją rezerwację w Parys Saint-Barber."
+>
+  <section class="py-16 px-4 max-w-xl mx-auto">
+    <div class="text-center mb-10">
+      <h1 class="text-4xl md:text-5xl font-bold mb-3">Anulowanie wizyty</h1>
+    </div>
+
+    <div class="cancel-card" aria-live="polite">
+      {fetchError && (
+        <div class="cancel-state">
+          <p class="cancel-message">Nie udało się pobrać informacji o rezerwacji. Spróbuj ponownie lub skontaktuj się z nami telefonicznie.</p>
+        </div>
+      )}
+
+      {notFound && (
+        <div class="cancel-state">
+          <p class="cancel-message">Nie znaleziono takiej rezerwacji.</p>
+        </div>
+      )}
+
+      {appointment && appointment.status === 'cancelled' && (
+        <div class="cancel-state">
+          <p class="cancel-message">Ta wizyta została już anulowana.</p>
+        </div>
+      )}
+
+      {appointment && appointment.status === 'confirmed' && (
+        <div id="cancel-widget" data-token={token}>
+          <div class="appointment-summary">
+            <p class="card-title">Twoja wizyta</p>
+            <p class="summary-main">{appointment.serviceName ?? 'Usługa'}</p>
+            <p class="summary-sub">{formattedDate}</p>
+            <p class="summary-sub">Klient: {appointment.clientName}</p>
+          </div>
+          <div id="cancel-actions" class="cancel-actions">
+            <button type="button" id="cancel-btn" class="cancel-btn">Anuluj wizytę</button>
+          </div>
+          <div id="cancel-result" class="cancel-result" role="alert"></div>
+        </div>
+      )}
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .cancel-card {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-left: 3px solid var(--color-accent-gold);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+
+    :global(.dark) & {
+      background-color: var(--color-bg-surface-dark);
+      border-color: rgba(206, 171, 93, 0.2);
+      border-left-color: var(--color-accent-gold);
+    }
+  }
+
+  .cancel-state {
+    text-align: center;
+    padding: 1rem 0;
+  }
+
+  .cancel-message {
+    font-size: 1.0625rem;
+    font-weight: 500;
+    color: #111827;
+
+    :global(.dark) & {
+      color: var(--color-text-dark);
+    }
+  }
+
+  .appointment-summary {
+    margin-bottom: 1.25rem;
+  }
+
+  .card-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #6b7280;
+    margin-bottom: 0.5rem;
+    font-family: 'Inter', sans-serif;
+
+    :global(.dark) & {
+      color: #9ca3af;
+    }
+  }
+
+  .summary-main {
+    font-size: 1.1875rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0.25rem;
+
+    :global(.dark) & {
+      color: var(--color-text-dark);
+    }
+  }
+
+  .summary-sub {
+    font-size: 0.9375rem;
+    color: #6b7280;
+
+    :global(.dark) & {
+      color: #9ca3af;
+    }
+  }
+
+  .cancel-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .cancel-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-accent-red);
+    background: none;
+    color: var(--color-accent-red);
+    font-weight: 600;
+    font-size: 0.9375rem;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, opacity 0.2s;
+
+    &:hover:not(:disabled) {
+      background-color: var(--color-accent-red);
+      color: #ffffff;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    &.is-confirming {
+      background-color: var(--color-accent-red);
+      color: #ffffff;
+    }
+  }
+
+  /* :global — this paragraph is created client-side via document.createElement,
+     so it never gets Astro's scope attribute for the normal scoped rule to match. */
+  :global(.cancel-hint) {
+    font-size: 0.875rem;
+    color: #6b7280;
+
+    :global(.dark) & {
+      color: #9ca3af;
+    }
+  }
+
+  .cancel-result {
+    margin-top: 1rem;
+    font-size: 0.9375rem;
+    min-height: 1.25rem;
+
+    &.is-success {
+      color: #16a34a;
+      font-weight: 500;
+    }
+
+    &.is-error {
+      color: var(--color-accent-red);
+    }
+  }
+</style>
+
+<script>
+  const widget = document.getElementById('cancel-widget') as HTMLDivElement | null;
+  if (widget) {
+    const token = widget.dataset.token as string;
+    const cancelBtn = document.getElementById('cancel-btn') as HTMLButtonElement;
+    const actionsEl = document.getElementById('cancel-actions') as HTMLDivElement;
+    const resultEl = document.getElementById('cancel-result') as HTMLDivElement;
+
+    let confirming = false;
+
+    cancelBtn.addEventListener('click', async () => {
+      if (!confirming) {
+        confirming = true;
+        cancelBtn.textContent = 'Na pewno? Kliknij ponownie, aby potwierdzić';
+        cancelBtn.classList.add('is-confirming');
+        const hint = document.createElement('p');
+        hint.className = 'cancel-hint';
+        hint.textContent = 'Kliknięcie ponownie anuluje wizytę bezpowrotnie.';
+        actionsEl.appendChild(hint);
+        return;
+      }
+
+      cancelBtn.disabled = true;
+      cancelBtn.textContent = 'Anulowanie…';
+      resultEl.textContent = '';
+      resultEl.classList.remove('is-error', 'is-success');
+
+      try {
+        const res = await fetch(`/api/bookings/token/${token}/cancel`, { method: 'POST' });
+        if (res.ok) {
+          actionsEl.remove();
+          resultEl.textContent = 'Wizyta została anulowana. Do zobaczenia innym razem!';
+          resultEl.classList.add('is-success');
+        } else {
+          resultEl.textContent = 'Nie udało się anulować wizyty. Spróbuj ponownie lub skontaktuj się z nami telefonicznie.';
+          resultEl.classList.add('is-error');
+          cancelBtn.disabled = false;
+          cancelBtn.textContent = 'Anuluj wizytę';
+          cancelBtn.classList.remove('is-confirming');
+          confirming = false;
+        }
+      } catch {
+        resultEl.textContent = 'Wystąpił błąd połączenia. Spróbuj ponownie.';
+        resultEl.classList.add('is-error');
+        cancelBtn.disabled = false;
+        cancelBtn.textContent = 'Anuluj wizytę';
+        cancelBtn.classList.remove('is-confirming');
+        confirming = false;
+      }
+    });
+  }
+</script>
