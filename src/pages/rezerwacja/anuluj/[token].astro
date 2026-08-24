@@ -1,5 +1,7 @@
 ---
+import { env } from 'cloudflare:workers';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getAppointmentByCancelToken, getAnyServiceById } from '../../../lib/db';
 
 const { token } = Astro.params;
 
@@ -14,12 +16,19 @@ let appointment: TokenResponse | null = null;
 let notFound = false;
 let fetchError = false;
 
+// Query D1 directly rather than self-fetching /api/bookings/token/[token] — a Worker
+// fetching its own public hostname during SSR is unreliable on Cloudflare.
 if (token) {
   try {
-    const apiUrl = new URL(`/api/bookings/token/${encodeURIComponent(token)}`, Astro.url.origin);
-    const res = await fetch(apiUrl);
-    if (res.ok) {
-      appointment = (await res.json()) as TokenResponse;
+    const row = await getAppointmentByCancelToken(env.DB, token);
+    if (row) {
+      const service = await getAnyServiceById(env.DB, row.service_id);
+      appointment = {
+        clientName: row.client_name,
+        serviceName: service?.name ?? null,
+        startAtISO: row.start_at,
+        status: row.status,
+      };
     } else {
       notFound = true;
     }
