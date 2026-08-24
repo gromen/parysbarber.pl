@@ -5,5 +5,5 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "parysbarber-bookings"
-database_id = "REPLACE_AFTER_WRANGLER_D1_CREATE"
+database_id = "b7a5003e-c010-4856-bdb6-c7411c0dec37"
 migrations_dir = "migrations"
