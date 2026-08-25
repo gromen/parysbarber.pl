@@ -6,8 +6,8 @@ CREATE TABLE services (
 );
 
 INSERT INTO services (name, duration_minutes, active) VALUES
-  ('Strzyżenie', 30, 1),
-  ('Strzyżenie + broda', 45, 1);
+  ('Strzyżenie', 40, 1),
+  ('Strzyżenie + broda', 60, 1);
 
 CREATE TABLE appointments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
