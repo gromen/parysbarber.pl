@@ -2,12 +2,13 @@
 import { env } from 'cloudflare:workers';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { requireAuth } from '../../lib/auth';
-import { listUpcomingAppointments } from '../../lib/db';
+import { listUpcomingAppointments, listUpcomingBlocks } from '../../lib/db';
 
 const authed = await requireAuth(Astro);
 if (!authed) return Astro.redirect('/panel/login');
 
 const appointments = await listUpcomingAppointments(env.DB);
+const blocks = await listUpcomingBlocks(env.DB);
 
 const dateFormatter = new Intl.DateTimeFormat('pl-PL', {
   timeZone: 'Europe/Warsaw',
@@ -27,15 +28,24 @@ function dayKey(iso: string): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Warsaw' }).format(new Date(iso));
 }
 
-const groups: { key: string; label: string; items: typeof appointments }[] = [];
-for (const appt of appointments) {
-  const key = dayKey(appt.start_at);
+type AppointmentItem = (typeof appointments)[number] & { kind: 'appointment' };
+type BlockItem = (typeof blocks)[number] & { kind: 'block' };
+type ScheduleItem = AppointmentItem | BlockItem;
+
+const scheduleItems: ScheduleItem[] = [
+  ...appointments.map((appt): AppointmentItem => ({ ...appt, kind: 'appointment' })),
+  ...blocks.map((block): BlockItem => ({ ...block, kind: 'block' })),
+].sort((a, b) => a.start_at.localeCompare(b.start_at));
+
+const groups: { key: string; label: string; items: ScheduleItem[] }[] = [];
+for (const item of scheduleItems) {
+  const key = dayKey(item.start_at);
   let group = groups.find((g) => g.key === key);
   if (!group) {
-    group = { key, label: dateFormatter.format(new Date(appt.start_at)), items: [] };
+    group = { key, label: dateFormatter.format(new Date(item.start_at)), items: [] };
     groups.push(group);
   }
-  group.items.push(appt);
+  group.items.push(item);
 }
 ---
 
@@ -46,7 +56,29 @@ for (const appt of appointments) {
       <button id="logout-btn" class="logout-btn">Wyloguj</button>
     </div>
 
-    {appointments.length === 0 && (
+    <div class="block-form-card">
+      <h2 class="block-form-title">Zablokuj godziny</h2>
+      <form id="block-form" class="block-form">
+        <div class="block-form-fields">
+          <div class="field">
+            <label for="block-date">Data</label>
+            <input type="date" id="block-date" name="date" required />
+          </div>
+          <div class="field">
+            <label for="block-start">Od</label>
+            <input type="time" id="block-start" name="startTime" required />
+          </div>
+          <div class="field">
+            <label for="block-end">Do</label>
+            <input type="time" id="block-end" name="endTime" required />
+          </div>
+        </div>
+        <div id="block-form-message" class="form-message" role="alert"></div>
+        <button type="submit" id="block-submit-btn" class="block-submit-btn">Zablokuj godziny</button>
+      </form>
+    </div>
+
+    {scheduleItems.length === 0 && (
       <p class="empty-state">Brak nadchodzących wizyt</p>
     )}
 
@@ -54,20 +86,34 @@ for (const appt of appointments) {
       <div class="day-group">
         <h2 class="day-label">{group.label}</h2>
         <div class="appt-list">
-          {group.items.map((appt) => (
-            <article class="appt-card" id={`appt-${appt.id}`} data-appt-id={appt.id}>
-              <div class="appt-main">
-                <p class="appt-time">{timeFormatter.format(new Date(appt.start_at))}</p>
-                <p class="appt-service">{appt.service_name}</p>
-                <p class="appt-client">{appt.client_name}</p>
-                <p class="appt-phone">
-                  <a href={`tel:${appt.client_phone}`} class="contact-link">{appt.client_phone}</a>
-                </p>
-              </div>
-              <div class="appt-actions">
-                <button class="cancel-btn" data-step="ask">Anuluj</button>
-              </div>
-            </article>
+          {group.items.map((item) => (
+            item.kind === 'appointment' ? (
+              <article class="appt-card" id={`appt-${item.id}`} data-appt-id={item.id}>
+                <div class="appt-main">
+                  <p class="appt-time">{timeFormatter.format(new Date(item.start_at))}</p>
+                  <p class="appt-service">{item.service_name}</p>
+                  <p class="appt-client">{item.client_name}</p>
+                  <p class="appt-phone">
+                    <a href={`tel:${item.client_phone}`} class="contact-link">{item.client_phone}</a>
+                  </p>
+                </div>
+                <div class="appt-actions">
+                  <button class="cancel-btn" data-step="ask">Anuluj</button>
+                </div>
+              </article>
+            ) : (
+              <article class="appt-card block-card" id={`block-${item.id}`} data-block-id={item.id}>
+                <div class="appt-main">
+                  <p class="appt-time">
+                    {timeFormatter.format(new Date(item.start_at))}–{timeFormatter.format(new Date(item.end_at))}
+                  </p>
+                  <p class="appt-client block-label">Zablokowane</p>
+                </div>
+                <div class="appt-actions">
+                  <button class="delete-block-btn" data-step="ask">Usuń</button>
+                </div>
+              </article>
+            )
           ))}
         </div>
       </div>
@@ -118,6 +164,86 @@ for (const appt of appointments) {
         btn.classList.remove('cancel-btn--confirm');
       }
     });
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('.delete-block-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      if (btn.dataset.step === 'ask') {
+        btn.dataset.step = 'confirm';
+        btn.textContent = 'Na pewno?';
+        btn.classList.add('delete-block-btn--confirm');
+        return;
+      }
+
+      const card = btn.closest('.block-card') as HTMLElement;
+      const id = card.dataset.blockId;
+      btn.disabled = true;
+      btn.textContent = 'Usuwanie…';
+
+      try {
+        const res = await fetch(`/api/blocks/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          card.classList.add('appt-card--cancelled');
+          btn.textContent = 'Usunięto';
+        } else {
+          btn.disabled = false;
+          btn.dataset.step = 'ask';
+          btn.textContent = 'Usuń';
+          btn.classList.remove('delete-block-btn--confirm');
+        }
+      } catch {
+        btn.disabled = false;
+        btn.dataset.step = 'ask';
+        btn.textContent = 'Usuń';
+        btn.classList.remove('delete-block-btn--confirm');
+      }
+    });
+  });
+
+  const blockForm = document.getElementById('block-form') as HTMLFormElement;
+  const blockSubmitBtn = document.getElementById('block-submit-btn') as HTMLButtonElement;
+  const blockFormMessageEl = document.getElementById('block-form-message') as HTMLDivElement;
+
+  blockForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    blockFormMessageEl.textContent = '';
+    blockFormMessageEl.classList.remove('is-error');
+
+    const formData = new FormData(blockForm);
+    const date = String(formData.get('date') ?? '');
+    const startTime = String(formData.get('startTime') ?? '');
+    const endTime = String(formData.get('endTime') ?? '');
+
+    blockSubmitBtn.disabled = true;
+    blockSubmitBtn.textContent = 'Blokowanie…';
+
+    try {
+      const res = await fetch('/api/blocks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date, startTime, endTime }),
+      });
+
+      if (res.ok) {
+        window.location.reload();
+        return;
+      }
+
+      const errorData = (await res.json().catch(() => ({}))) as { error?: string };
+      if (res.status === 409 && errorData.error === 'overlaps_appointment') {
+        blockFormMessageEl.textContent = 'W tym przedziale masz już zarezerwowaną wizytę klienta.';
+      } else {
+        blockFormMessageEl.textContent = 'Nie udało się zablokować godzin. Spróbuj ponownie.';
+      }
+      blockFormMessageEl.classList.add('is-error');
+    } catch {
+      blockFormMessageEl.textContent = 'Nie udało się zablokować godzin. Spróbuj ponownie.';
+      blockFormMessageEl.classList.add('is-error');
+    } finally {
+      blockSubmitBtn.disabled = false;
+      blockSubmitBtn.textContent = 'Zablokuj godziny';
+    }
   });
 </script>
 
@@ -176,6 +302,115 @@ for (const appt of appointments) {
 
     :global(.dark) & {
       color: #9ca3af;
+    }
+  }
+
+  .block-form-card {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1rem 1.25rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+
+    :global(.dark) & {
+      background-color: var(--color-bg-surface-dark);
+      border-color: rgba(206, 171, 93, 0.2);
+    }
+  }
+
+  .block-form-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0.75rem;
+
+    :global(.dark) & {
+      color: var(--color-text-dark);
+    }
+  }
+
+  .block-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .block-form-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+
+    @media (min-width: 640px) {
+      flex-direction: row;
+      align-items: flex-end;
+    }
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+
+    label {
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: #374151;
+
+      :global(.dark) & {
+        color: var(--color-text-dark);
+      }
+    }
+
+    input {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.5rem;
+      font-size: 0.9375rem;
+      background-color: #ffffff;
+      color: #111827;
+
+      :global(.dark) & {
+        background-color: var(--color-bg-dark);
+        border-color: rgba(206, 171, 93, 0.2);
+        color: var(--color-text-dark);
+      }
+
+      &:focus {
+        outline: 2px solid var(--color-accent-gold);
+        outline-offset: 1px;
+      }
+    }
+  }
+
+  .form-message {
+    font-size: 0.9375rem;
+    min-height: 1.25rem;
+
+    &.is-error {
+      color: var(--color-accent-red);
+    }
+  }
+
+  .block-submit-btn {
+    align-self: flex-start;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.5rem;
+    border: none;
+    background-color: var(--color-accent-gold);
+    color: #111827;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    cursor: pointer;
+
+    &:hover {
+      opacity: 0.9;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
   }
 
@@ -313,6 +548,64 @@ for (const appt of appointments) {
     &:hover {
       opacity: 0.9;
       background-color: var(--color-accent-red);
+    }
+  }
+
+  .block-card {
+    border-style: dashed;
+    border-color: #d1d5db;
+    border-left: 3px dashed #9ca3af;
+    background-color: #f9fafb;
+
+    :global(.dark) & {
+      background-color: rgba(255, 255, 255, 0.02);
+      border-color: rgba(156, 163, 175, 0.4);
+      border-left-color: rgba(156, 163, 175, 0.6);
+    }
+  }
+
+  .block-label {
+    color: #6b7280;
+    font-style: italic;
+
+    :global(.dark) & {
+      color: #9ca3af;
+    }
+  }
+
+  .delete-block-btn {
+    padding: 0.5rem 1rem;
+    background-color: transparent;
+    border: 1px solid #6b7280;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover {
+      background-color: rgba(107, 114, 128, 0.08);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    :global(.dark) & {
+      border-color: #9ca3af;
+      color: #9ca3af;
+    }
+  }
+
+  .delete-block-btn--confirm {
+    background-color: #6b7280;
+    color: #ffffff;
+
+    &:hover {
+      opacity: 0.9;
+      background-color: #6b7280;
     }
   }
 </style>

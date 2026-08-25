@@ -25,6 +25,13 @@ export interface UpcomingAppointmentRow extends AppointmentRow {
   service_name: string;
 }
 
+export interface BlockRow {
+  id: number;
+  start_at: string;
+  end_at: string;
+  created_at: string;
+}
+
 export async function listActiveServices(db: D1Database): Promise<ServiceRow[]> {
   const { results } = await db
     .prepare('SELECT * FROM services WHERE active = 1 ORDER BY id ASC')
@@ -76,10 +83,27 @@ export async function getAvailableSlots(
     endAtISO: r.end_at,
   }));
 
+  const { results: blockResults } = await db
+    .prepare(
+      `SELECT start_at, end_at FROM blocks
+       WHERE start_at < ? AND end_at > ?
+       ORDER BY start_at ASC`
+    )
+    .bind(
+      new Date(new Date(dayEnd).getTime() + 24 * 60 * 60 * 1000).toISOString(),
+      new Date(new Date(dayStart).getTime() - 24 * 60 * 60 * 1000).toISOString()
+    )
+    .all<{ start_at: string; end_at: string }>();
+
+  const existingBlocks = (blockResults ?? []).map((r) => ({
+    startAtISO: r.start_at,
+    endAtISO: r.end_at,
+  }));
+
   return computeAvailableSlots({
     date: dateISO,
     serviceDurationMinutes: service.duration_minutes,
-    existingAppointments,
+    existingAppointments: [...existingAppointments, ...existingBlocks],
     now: new Date(),
   });
 }
@@ -125,6 +149,19 @@ export async function createAppointment(
     .first<{ id: number }>();
 
   if (overlap) {
+    return { ok: false, reason: 'slot_taken' };
+  }
+
+  const blockOverlap = await db
+    .prepare(
+      `SELECT id FROM blocks
+       WHERE start_at < ? AND end_at > ?
+       LIMIT 1`
+    )
+    .bind(input.endAtISO, input.startAtISO)
+    .first<{ id: number }>();
+
+  if (blockOverlap) {
     return { ok: false, reason: 'slot_taken' };
   }
 
@@ -222,5 +259,59 @@ export async function listUpcomingAppointments(
     )
     .bind(new Date().toISOString())
     .all<UpcomingAppointmentRow>();
+  return results ?? [];
+}
+
+export interface CreateBlockInput {
+  startAtISO: string;
+  endAtISO: string;
+}
+
+export type CreateBlockResult =
+  | { ok: true; block: BlockRow }
+  | { ok: false; reason: 'overlaps_appointment' };
+
+export async function createBlock(
+  db: D1Database,
+  input: CreateBlockInput
+): Promise<CreateBlockResult> {
+  const overlap = await db
+    .prepare(
+      `SELECT id FROM appointments
+       WHERE status = 'confirmed'
+       AND start_at < ? AND end_at > ?
+       LIMIT 1`
+    )
+    .bind(input.endAtISO, input.startAtISO)
+    .first<{ id: number }>();
+
+  if (overlap) {
+    return { ok: false, reason: 'overlaps_appointment' };
+  }
+
+  const inserted = await db
+    .prepare(
+      `INSERT INTO blocks (start_at, end_at) VALUES (?, ?) RETURNING *`
+    )
+    .bind(input.startAtISO, input.endAtISO)
+    .first<BlockRow>();
+
+  if (!inserted) {
+    return { ok: false, reason: 'overlaps_appointment' };
+  }
+
+  return { ok: true, block: inserted };
+}
+
+export async function deleteBlock(db: D1Database, id: number): Promise<boolean> {
+  const result = await db.prepare('DELETE FROM blocks WHERE id = ?').bind(id).run();
+  return (result.meta?.changes ?? 0) > 0;
+}
+
+export async function listUpcomingBlocks(db: D1Database): Promise<BlockRow[]> {
+  const { results } = await db
+    .prepare('SELECT * FROM blocks WHERE end_at >= ? ORDER BY start_at ASC')
+    .bind(new Date().toISOString())
+    .all<BlockRow>();
   return results ?? [];
 }
