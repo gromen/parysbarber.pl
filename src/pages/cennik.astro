@@ -1,0 +1,230 @@
+---
+export const prerender = true;
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { Scissors, Brush, Sparkles, Clock } from '@lucide/astro';
+
+const priceItems = [
+  {
+    name: 'Strzyżenie',
+    description: 'Klasyczne i nowoczesne cięcia dopasowane do Twojej twarzy',
+    duration: '40 min',
+    price: '60 zł',
+    accent: 'red',
+    icon: Scissors,
+  },
+  {
+    name: 'Strzyżenie brody',
+    description: 'Modelowanie i pielęgnacja brody na miarę',
+    duration: '40 min',
+    price: '40 zł',
+    accent: 'gold',
+    icon: Brush,
+  },
+  {
+    name: 'Combo (włosy + broda)',
+    description: 'Pełny zestaw — strzyżenie i broda w jednej wizycie',
+    duration: '60 min',
+    price: '100 zł',
+    accent: 'blue',
+    featured: true,
+    icon: Sparkles,
+  },
+];
+---
+
+<BaseLayout
+  title="Cennik — Parys Saint-Barber"
+  description="Cennik usług Parys Saint-Barber: strzyżenie, strzyżenie brody i combo. Sprawdź ceny i zarezerwuj wizytę online."
+>
+  <section class="py-16 px-4 max-w-5xl mx-auto">
+
+    <!-- Page Header -->
+    <div class="text-center mb-14">
+      <span class="text-accent-red uppercase text-xs font-semibold tracking-[0.2em]">Cennik</span>
+      <h1 class="mt-2 text-4xl md:text-5xl font-bold text-gray-900 dark:text-text-dark">Nasze ceny</h1>
+      <div class="mt-4 mx-auto w-12 h-0.5 bg-accent-gold"></div>
+      <p class="mt-4 text-gray-600 dark:text-text-dark/70 text-base">Przejrzyste ceny, bez niespodzianek</p>
+    </div>
+
+    <!-- Price cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {priceItems.map((item) => (
+        <article class:list={['price-card', `price-card--${item.accent}`, { 'price-card--featured': item.featured }]}>
+          {item.featured && <span class="price-badge">Najczęściej wybierane</span>}
+
+          <div class="price-icon-wrap">
+            <item.icon class="w-8 h-8" stroke-width={1.5} aria-hidden="true" />
+          </div>
+
+          <h2 class="price-name">{item.name}</h2>
+          <p class="price-description">{item.description}</p>
+
+          <div class="price-amount">{item.price}</div>
+          <div class="price-duration">
+            <Clock class="w-4 h-4" aria-hidden="true" />
+            {item.duration}
+          </div>
+        </article>
+      ))}
+    </div>
+
+    <!-- CTA -->
+    <div class="mt-14 text-center flex flex-col items-center gap-4">
+      <p class="text-gray-600 dark:text-text-dark/70 text-sm md:text-base">
+        Gotowy na odświeżony wygląd? Zarezerwuj wizytę online w kilka minut.
+      </p>
+      <a
+        href="/rezerwacja"
+        class="inline-block px-8 py-3.5 bg-accent-red text-white font-semibold rounded-sm tracking-wide hover:bg-accent-red/90 active:scale-95 transition-all duration-200 shadow-lg shadow-accent-red/30 text-sm md:text-base"
+      >
+        Zarezerwuj online
+      </a>
+    </div>
+
+  </section>
+</BaseLayout>
+
+<style>
+  .price-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 2.5rem 1.5rem 2rem;
+    border-radius: 0.125rem;
+    background-color: #ffffff;
+    border-top: 3px solid var(--color-accent-gold);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    transition: box-shadow 0.3s, transform 0.3s;
+
+    &:hover {
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+      transform: translateY(-4px);
+    }
+
+    :global(.dark) & {
+      background-color: var(--color-bg-surface-dark);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    }
+  }
+
+  .price-card--featured {
+    border-top-color: var(--color-accent-red);
+
+    @media (min-width: 768px) {
+      transform: scale(1.04);
+
+      &:hover {
+        transform: scale(1.04) translateY(-4px);
+      }
+    }
+  }
+
+  .price-badge {
+    position: absolute;
+    top: -0.75rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--color-accent-red);
+    color: #fff;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.9rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(218, 41, 28, 0.35);
+
+    :global(.dark) & {
+      box-shadow: 0 2px 8px rgba(206, 171, 93, 0.3);
+    }
+  }
+
+  .price-icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 999px;
+    margin-bottom: 1.25rem;
+
+    .price-card--red & {
+      background-color: rgba(218, 41, 28, 0.08);
+      color: var(--color-accent-red);
+
+      :global(.dark) & {
+        background-color: rgba(218, 41, 28, 0.15);
+      }
+    }
+
+    .price-card--gold & {
+      background-color: rgba(206, 171, 93, 0.1);
+      color: var(--color-accent-gold);
+
+      :global(.dark) & {
+        background-color: rgba(206, 171, 93, 0.15);
+      }
+    }
+
+    .price-card--blue & {
+      background-color: rgba(0, 65, 112, 0.08);
+      color: var(--color-accent-blue);
+
+      :global(.dark) & {
+        background-color: rgba(0, 65, 112, 0.25);
+        color: var(--color-accent-gold);
+      }
+    }
+  }
+
+  .price-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 0.5rem;
+
+    :global(.dark) & {
+      color: var(--color-text-dark);
+    }
+  }
+
+  .price-description {
+    font-size: 0.875rem;
+    color: #6b7280;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+    min-height: 2.6em;
+
+    :global(.dark) & {
+      color: rgba(240, 230, 211, 0.6);
+    }
+  }
+
+  .price-amount {
+    font-family: 'Oswald', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 600;
+    color: #111827;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+
+    :global(.dark) & {
+      color: var(--color-text-dark);
+    }
+  }
+
+  .price-duration {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.8125rem;
+    color: #9ca3af;
+
+    :global(.dark) & {
+      color: rgba(240, 230, 211, 0.5);
+    }
+  }
+</style>

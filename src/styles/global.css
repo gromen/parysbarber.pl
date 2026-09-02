@@ -19,6 +19,10 @@ body {
   transition:
     background-color 0.3s,
     color 0.3s;
+
+  &:where(.dark, .dark *) {
+    background-color: var(--color-bg-dark);
+  }
 }
 
 h1,

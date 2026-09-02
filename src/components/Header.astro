@@ -1,11 +1,13 @@
 ---
 import ThemeToggle from './ThemeToggle.astro';
+import { Menu, X } from '@lucide/astro';
 
 const pathname = Astro.url.pathname;
 
 const navLinks = [
   { href: '/', label: 'Strona główna' },
   { href: '/realizacje', label: 'Realizacje' },
+  { href: '/cennik', label: 'Cennik' },
   { href: '/rezerwacja', label: 'Rezerwacja' },
   { href: '/kontakt', label: 'Kontakt' },
 ];
@@ -61,12 +63,8 @@ function isActive(href: string): boolean {
         aria-controls="mobile-menu"
         class="md:hidden p-2 rounded text-gray-700 dark:text-text-dark hover:bg-gray-100 dark:hover:bg-bg-dark transition-colors"
       >
-        <svg id="icon-hamburger" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-        <svg id="icon-close" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
+        <Menu id="icon-hamburger" class="h-6 w-6" aria-hidden="true" />
+        <X id="icon-close" class="h-6 w-6 hidden" aria-hidden="true" />
       </button>
     </div>
   </div>
@@ -108,7 +106,7 @@ function isActive(href: string): boolean {
   }
 
   #mobile-menu.is-open {
-    max-height: 200px;
+    max-height: 260px;
     opacity: 1;
     visibility: visible;
   }
@@ -138,6 +136,10 @@ function isActive(href: string): boolean {
 
   #mobile-menu.is-open li:nth-child(4) {
     animation: slideInFromLeft 0.25s ease-out 460ms both;
+  }
+
+  #mobile-menu.is-open li:nth-child(5) {
+    animation: slideInFromLeft 0.25s ease-out 530ms both;
   }
 </style>
 
