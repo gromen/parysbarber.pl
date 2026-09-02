@@ -3,6 +3,7 @@ export const prerender = true;
 import GalleryGrid from '../components/GalleryGrid.astro';
 import Lightbox from '../components/Lightbox.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { Play } from '@lucide/astro';
 
 const images = [
   { src: 'https://picsum.photos/seed/barber1/600/750',  thumb: 'https://picsum.photos/seed/barber1/400/500',  alt: 'Realizacja 1',  width: 600, height: 750 },
@@ -43,9 +44,7 @@ const images = [
             style="width:100%;height:100%;object-fit:cover;display:block;"
           ></video>
           <button class="reel-play-btn" aria-label="Odtwórz wideo">
-            <svg class="icon-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M8 5v14l11-7z"/>
-            </svg>
+            <Play class="icon-play" aria-hidden="true" />
           </button>
         </div>
       </div>
