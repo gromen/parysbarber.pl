@@ -1,12 +1,12 @@
 // Working hours per weekday (0 = Sunday ... 6 = Saturday), 24h format, Europe/Warsaw.
 export const WORKING_HOURS: Record<number, { open: string; close: string } | null> = {
   0: null, // Niedziela — zamknięte
-  1: { open: '09:00', close: '18:00' },
-  2: { open: '09:00', close: '18:00' },
-  3: { open: '09:00', close: '18:00' },
-  4: { open: '09:00', close: '18:00' },
-  5: { open: '09:00', close: '18:00' },
-  6: { open: '09:00', close: '18:00' },
+  1: { open: '09:00', close: '20:00' },
+  2: { open: '09:00', close: '20:00' },
+  3: { open: '09:00', close: '20:00' },
+  4: { open: '09:00', close: '20:00' },
+  5: { open: '09:00', close: '20:00' },
+  6: { open: '08:00', close: '14:00' },
 };
 
 // Bufor sprzątania/przerwy między wizytami.

@@ -10,6 +10,13 @@ if (!authed) return Astro.redirect('/panel/login');
 const appointments = await listUpcomingAppointments(env.DB);
 const blocks = await listUpcomingBlocks(env.DB);
 
+const timeOptions: string[] = [];
+for (let minutes = 8 * 60; minutes <= 20 * 60; minutes += 15) {
+  const h = String(Math.floor(minutes / 60)).padStart(2, '0');
+  const m = String(minutes % 60).padStart(2, '0');
+  timeOptions.push(`${h}:${m}`);
+}
+
 const dateFormatter = new Intl.DateTimeFormat('pl-PL', {
   timeZone: 'Europe/Warsaw',
   weekday: 'short',
@@ -66,11 +73,17 @@ for (const item of scheduleItems) {
           </div>
           <div class="field">
             <label for="block-start">Od</label>
-            <input type="time" id="block-start" name="startTime" required />
+            <select id="block-start" name="startTime" required>
+              <option value="" disabled selected>--:--</option>
+              {timeOptions.map((t) => <option value={t}>{t}</option>)}
+            </select>
           </div>
           <div class="field">
             <label for="block-end">Do</label>
-            <input type="time" id="block-end" name="endTime" required />
+            <select id="block-end" name="endTime" required>
+              <option value="" disabled selected>--:--</option>
+              {timeOptions.map((t) => <option value={t}>{t}</option>)}
+            </select>
           </div>
         </div>
         <div id="block-form-message" class="form-message" role="alert"></div>
@@ -245,6 +258,43 @@ for (const item of scheduleItems) {
       blockSubmitBtn.textContent = 'Zablokuj godziny';
     }
   });
+
+  const blockDateInput = document.getElementById('block-date') as HTMLInputElement;
+  const blockStartSelect = document.getElementById('block-start') as unknown as HTMLSelectElement;
+  const blockEndSelect = document.getElementById('block-end') as unknown as HTMLSelectElement;
+
+  function localDateStr(d: Date): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  function applyPastTimeFilter() {
+    const now = new Date();
+    blockDateInput.min = localDateStr(now);
+
+    const isToday = blockDateInput.value === localDateStr(now);
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    const remainder = nowMinutes % 15;
+    const nextSlotMinutes = remainder === 0 ? nowMinutes : nowMinutes + (15 - remainder);
+
+    for (const select of [blockStartSelect, blockEndSelect]) {
+      let selectedHidden = false;
+      for (const option of Array.from(select.options)) {
+        if (!option.value) continue;
+        const [h, m] = option.value.split(':').map(Number);
+        const optionMinutes = h * 60 + m;
+        const shouldHide = isToday && optionMinutes < nextSlotMinutes;
+        option.hidden = shouldHide;
+        if (shouldHide && option.selected) selectedHidden = true;
+      }
+      if (selectedHidden) select.selectedIndex = 0;
+    }
+  }
+
+  applyPastTimeFilter();
+  blockDateInput.addEventListener('change', applyPastTimeFilter);
 </script>
 
 <style>
@@ -363,7 +413,8 @@ for (const item of scheduleItems) {
       }
     }
 
-    input {
+    input,
+    select {
       padding: 0.5rem 0.75rem;
       border: 1px solid #d1d5db;
       border-radius: 0.5rem;
