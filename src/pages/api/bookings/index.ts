@@ -106,6 +106,10 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   const cancelUrl = new URL(`/rezerwacja/anuluj/${result.appointment.cancel_token}`, request.url).toString();
+  const icsUrl = new URL(
+    `/api/bookings/token/${result.appointment.cancel_token}/ics`,
+    request.url
+  ).toString();
 
   const [confirmationResult, barberNotifyResult] = await Promise.all([
     sendBookingConfirmationEmail(env, {
@@ -113,7 +117,9 @@ export const POST: APIRoute = async ({ request }) => {
       clientName: result.appointment.client_name,
       serviceName: service.name,
       startAtISO: result.appointment.start_at,
+      endAtISO: result.appointment.end_at,
       cancelUrl,
+      icsUrl,
     }),
     sendBarberNewBookingEmail(env, {
       clientName: result.appointment.client_name,

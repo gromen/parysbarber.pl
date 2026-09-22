@@ -1,0 +1,31 @@
+{
+  "id": "/panel",
+  "name": "Panel — Parys Saint-Barber",
+  "short_name": "Panel Barbera",
+  "description": "Panel pracownika Parys Saint-Barber — nadchodzące wizyty, blokady godzin, powiadomienia.",
+  "lang": "pl",
+  "start_url": "/panel",
+  "display": "standalone",
+  "background_color": "#001a35",
+  "theme_color": "#001a35",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

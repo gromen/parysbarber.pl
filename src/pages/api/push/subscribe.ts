@@ -2,7 +2,6 @@ import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
 import { verifySessionToken, SESSION_COOKIE_NAME } from '../../../lib/auth';
 import {
-  getAppointmentByCancelToken,
   upsertPushSubscription,
   deletePushSubscriptionByEndpoint,
 } from '../../../lib/db';
@@ -28,8 +27,6 @@ interface SubscriptionBody {
 
 interface SubscribeBody {
   role?: unknown;
-  appointmentId?: unknown;
-  cancelToken?: unknown;
   subscription?: SubscriptionBody;
 }
 
@@ -59,9 +56,9 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     return jsonError('invalid_json', 400);
   }
 
-  const { role, cancelToken, subscription } = body;
+  const { role, subscription } = body;
 
-  if (role !== 'client' && role !== 'barber') {
+  if (role !== 'barber') {
     return jsonError('invalid_role', 400);
   }
 
@@ -70,35 +67,6 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   }
 
   const db = env.DB;
-
-  if (role === 'client') {
-    if (typeof cancelToken !== 'string' || cancelToken.trim().length === 0) {
-      return jsonError('missing_cancel_token', 400);
-    }
-
-    const appointment = await getAppointmentByCancelToken(db, cancelToken.trim());
-    // Only a still-active appointment may register a reminder subscription — a
-    // cancelled one has nothing left to remind about.
-    if (!appointment || appointment.status !== 'confirmed') {
-      return jsonError('appointment_not_found', 404);
-    }
-
-    const result = await upsertPushSubscription(db, {
-      role: 'client',
-      appointmentId: appointment.id,
-      endpoint: subscription.endpoint,
-      p256dh: subscription.keys.p256dh,
-      auth: subscription.keys.auth,
-    });
-    if (!result.ok) {
-      return jsonError('endpoint_role_mismatch', 409);
-    }
-
-    return new Response(JSON.stringify({ success: true, id: result.row.id }), {
-      status: 201,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
 
   // role === 'barber' — a single device-wide subscription (appointment_id NULL)
   // that gets notified for every new booking and every upcoming-appointment

@@ -1,9 +1,8 @@
 # parysbarber-reminders
 
-Standalone Cloudflare Worker (cron-only, no `fetch` traffic) that sends push
-reminders before appointments:
+Standalone Cloudflare Worker (cron-only, no `fetch` traffic) that sends a push
+reminder before each appointment:
 
-- **Client, 30 min before**: service, time, cancel link (`kind = 'client_30'`).
 - **Barber, 15 min before**: client name, phone, time, service, to every barber
   subscription (`kind = 'barber_15'`).
 

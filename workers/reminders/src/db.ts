@@ -34,7 +34,7 @@ export async function findAppointmentsInReminderWindow(
   db: D1Database,
   windowStartISO: string,
   windowEndISO: string,
-  kind: 'client_30' | 'barber_15'
+  kind: 'barber_15'
 ): Promise<UpcomingAppointmentRow[]> {
   const { results } = await db
     .prepare(
@@ -52,17 +52,6 @@ export async function findAppointmentsInReminderWindow(
   return results ?? [];
 }
 
-export async function getClientPushSubscriptionByAppointmentId(
-  db: D1Database,
-  appointmentId: number
-): Promise<PushSubscriptionDbRow | null> {
-  const row = await db
-    .prepare("SELECT * FROM push_subscriptions WHERE role = 'client' AND appointment_id = ?")
-    .bind(appointmentId)
-    .first<PushSubscriptionDbRow>();
-  return row ?? null;
-}
-
 export async function listBarberPushSubscriptions(db: D1Database): Promise<PushSubscriptionDbRow[]> {
   const { results } = await db
     .prepare("SELECT * FROM push_subscriptions WHERE role = 'barber'")
@@ -73,7 +62,7 @@ export async function listBarberPushSubscriptions(db: D1Database): Promise<PushS
 export async function markReminderSent(
   db: D1Database,
   appointmentId: number,
-  kind: 'client_30' | 'barber_15'
+  kind: 'barber_15'
 ): Promise<void> {
   await db
     .prepare(

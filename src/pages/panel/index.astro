@@ -18,7 +18,6 @@ const [reminderStats, barberSubs] = await Promise.all([
   countRemindersSentToday(env.DB),
   listBarberPushSubscriptions(env.DB),
 ]);
-const clientRemindersSent = reminderStats.find((r) => r.kind === 'client_30')?.count ?? 0;
 const barberRemindersSent = reminderStats.find((r) => r.kind === 'barber_15')?.count ?? 0;
 const activeBarberDevices = barberSubs.length;
 
@@ -119,7 +118,7 @@ for (const item of scheduleItems) {
 
     <div class="stats-card">
       <p class="stats-line">
-        Wysłane dziś przypomnienia: <strong>{clientRemindersSent}</strong> klient / <strong>{barberRemindersSent}</strong> barber
+        Wysłane dziś przypomnienia: <strong>{barberRemindersSent}</strong> barber
       </p>
       <p class="stats-line">
         Aktywne urządzenia barbera: <strong>{activeBarberDevices}</strong>
@@ -339,6 +338,7 @@ for (const item of scheduleItems) {
     on: 'włączone',
     denied: 'brak zgody',
     unsupported: 'nieobsługiwane',
+    ios: 'wymaga dodania do ekranu głównego',
     off: 'wyłączone',
   } as const;
 
@@ -367,9 +367,30 @@ for (const item of scheduleItems) {
     return outputArray;
   }
 
+  // iOS only exposes the Push API to a page launched from the home screen (iOS 16.4+),
+  // never to a regular browser tab — true for every browser there (Safari, Chrome,
+  // Brave, …), since they all run on Apple's WebKit. Detect that case specifically so
+  // the "unsupported" status can point at the actual fix instead of reading as a bug.
+  function isIosNonStandalone(): boolean {
+    const isIos =
+      /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isStandalone =
+      (navigator as unknown as { standalone?: boolean }).standalone === true ||
+      window.matchMedia('(display-mode: standalone)').matches;
+    return isIos && !isStandalone;
+  }
+
   async function initPushToggle() {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      setPushStatus('unsupported');
+      if (isIosNonStandalone()) {
+        setPushStatus('ios');
+        showPushError(
+          'Na iPhonie/iPadzie: dodaj tę stronę do ekranu głównego (Udostępnij → Dodaj do ekranu początkowego), aby włączyć powiadomienia.'
+        );
+      } else {
+        setPushStatus('unsupported');
+      }
       pushToggleInput.disabled = true;
       return;
     }
@@ -421,7 +442,9 @@ for (const item of scheduleItems) {
 
       clearPushMessage();
       setPushStatus('on');
-    } catch {
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Push subscribe failed:', err);
       showPushError('Nie udało się włączyć powiadomień. Spróbuj ponownie.');
       pushToggleInput.checked = false;
       setPushStatus('off');

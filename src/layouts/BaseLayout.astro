@@ -18,6 +18,13 @@ const {
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const ogImageURL = new URL(ogImage, Astro.site);
+
+// The panel gets its own manifest (separate start_url) so that "Add to Home Screen"
+// from inside /panel installs an app that launches straight into the panel, not the
+// public site's homepage.
+const manifestHref = Astro.url.pathname.startsWith('/panel')
+  ? '/manifest-panel.webmanifest'
+  : '/manifest.webmanifest';
 ---
 
 <!doctype html>
@@ -42,7 +49,7 @@ const ogImageURL = new URL(ogImage, Astro.site);
     <link rel="canonical" href={canonicalURL} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" href="/favicon.ico" />
-    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="manifest" href={manifestHref} />
     <meta name="theme-color" content="#001a35" />
     <link rel="apple-touch-icon" href="/icons/icon-192.png" />
     <meta name="generator" content={Astro.generator} />

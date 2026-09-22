@@ -4,8 +4,6 @@ import {
   cancelAppointmentByToken,
   getAppointmentByCancelToken,
   getAnyServiceById,
-  getClientPushSubscriptionByAppointmentId,
-  deletePushSubscriptionById,
 } from '../../../../../lib/db';
 import { sendBarberCancellationEmail } from '../../../../../lib/email';
 
@@ -42,15 +40,6 @@ export const POST: APIRoute = async ({ params }) => {
       status: 409,
       headers: { 'Content-Type': 'application/json' },
     });
-  }
-
-  try {
-    const clientSub = await getClientPushSubscriptionByAppointmentId(db, cancelled.id);
-    if (clientSub) {
-      await deletePushSubscriptionById(db, clientSub.id);
-    }
-  } catch (err) {
-    console.error(`Failed to delete client push subscription for cancelled appointment #${cancelled.id}:`, err);
   }
 
   const service = await getAnyServiceById(db, cancelled.service_id);

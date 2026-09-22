@@ -24,3 +24,5 @@ export const BARBER_NOTIFICATION_EMAIL = 'parysbarber@gmail.com';
 
 // Adres nadawcy dla Resend — wymaga zweryfikowanej domeny parysbarber.pl w Resend.
 export const BOOKING_FROM_EMAIL = 'Parys Saint-Barber <rezerwacje@parysbarber.pl>';
+
+export const BUSINESS_ADDRESS = 'ul. Tadeusza Kościuszki 38E/5U, 07-300 Ostrów Mazowiecka';

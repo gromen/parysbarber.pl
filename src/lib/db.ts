@@ -393,17 +393,6 @@ export async function listBarberPushSubscriptions(db: D1Database): Promise<PushS
   return results ?? [];
 }
 
-export async function getClientPushSubscriptionByAppointmentId(
-  db: D1Database,
-  appointmentId: number
-): Promise<PushSubscriptionDbRow | null> {
-  const row = await db
-    .prepare("SELECT * FROM push_subscriptions WHERE role = 'client' AND appointment_id = ?")
-    .bind(appointmentId)
-    .first<PushSubscriptionDbRow>();
-  return row ?? null;
-}
-
 export async function countRemindersSentToday(db: D1Database): Promise<{ kind: string; count: number }[]> {
   const { results } = await db
     .prepare(
