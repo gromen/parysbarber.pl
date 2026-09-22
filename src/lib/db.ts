@@ -5,6 +5,7 @@ export interface ServiceRow {
   name: string;
   duration_minutes: number;
   active: number;
+  sort_order: number;
 }
 
 export interface AppointmentRow {
@@ -34,7 +35,7 @@ export interface BlockRow {
 
 export async function listActiveServices(db: D1Database): Promise<ServiceRow[]> {
   const { results } = await db
-    .prepare('SELECT * FROM services WHERE active = 1 ORDER BY id ASC')
+    .prepare('SELECT * FROM services WHERE active = 1 ORDER BY sort_order ASC, id ASC')
     .all<ServiceRow>();
   return results ?? [];
 }
