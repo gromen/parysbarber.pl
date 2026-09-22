@@ -24,11 +24,26 @@ interface SendResult {
 }
 
 async function safeSend(env: Env, payload: Parameters<Resend['emails']['send']>[0]): Promise<SendResult> {
+  if (!env.RESEND_API_KEY) {
+    console.warn(
+      `RESEND_API_KEY is not set — skipping email "${payload.subject}". ` +
+        'Set it in .dev.vars locally, or via `wrangler secret put RESEND_API_KEY` in production.'
+    );
+    return { sent: false };
+  }
+
   try {
     const resend = new Resend(env.RESEND_API_KEY);
     const { error } = await resend.emails.send(payload);
     if (error) {
-      console.error('Resend send error:', error);
+      if (error.statusCode === 401 || error.statusCode === 403) {
+        console.error(
+          `Resend rejected the API key (${error.statusCode}: ${error.message}) — the booking was saved but ` +
+            'no email went out. Check RESEND_API_KEY in .dev.vars / wrangler secrets.'
+        );
+      } else {
+        console.error('Resend send error:', error);
+      }
       return { sent: false };
     }
     return { sent: true };

@@ -1,0 +1,3 @@
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxx
+ADMIN_PASSWORD_HASH=
+SESSION_SECRET=change-me-to-a-long-random-string
