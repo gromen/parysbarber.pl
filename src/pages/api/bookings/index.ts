@@ -5,9 +5,12 @@ import {
   getServiceById,
   getAvailableSlots,
   countFutureConfirmedAppointmentsByEmail,
+  listBarberPushSubscriptions,
+  deletePushSubscriptionById,
 } from '../../../lib/db';
 import { zonedDateToUTCISO } from '../../../lib/availability';
 import { sendBookingConfirmationEmail, sendBarberNewBookingEmail } from '../../../lib/email';
+import { sendPushNotification } from '../../../lib/push';
 import { TIMEZONE } from '../../../config/hours';
 
 export const prerender = false;
@@ -132,6 +135,32 @@ export const POST: APIRoute = async ({ request }) => {
   }
   if (!confirmationResult.sent) {
     console.error(`Client confirmation email failed for appointment #${result.appointment.id}.`);
+  }
+
+  try {
+    const barberSubs = await listBarberPushSubscriptions(db);
+    const formattedDateTime = new Intl.DateTimeFormat('pl-PL', {
+      timeZone: TIMEZONE,
+      day: 'numeric',
+      month: 'long',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(result.appointment.start_at));
+
+    await Promise.allSettled(
+      barberSubs.map(async (sub) => {
+        const pushResult = await sendPushNotification(env, sub, {
+          title: 'Nowa rezerwacja',
+          body: `${result.appointment.client_name}, ${result.appointment.client_phone}, ${service.name}, ${formattedDateTime}`,
+          url: '/panel',
+        });
+        if (!pushResult.ok && pushResult.deadSubscription) {
+          await deletePushSubscriptionById(db, sub.id);
+        }
+      })
+    );
+  } catch (err) {
+    console.error(`Barber push notification failed for appointment #${result.appointment.id}:`, err);
   }
 
   return new Response(

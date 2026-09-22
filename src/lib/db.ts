@@ -316,3 +316,101 @@ export async function listUpcomingBlocks(db: D1Database): Promise<BlockRow[]> {
     .all<BlockRow>();
   return results ?? [];
 }
+
+export interface PushSubscriptionDbRow {
+  id: number;
+  role: 'client' | 'barber';
+  appointment_id: number | null;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  created_at: string;
+}
+
+export interface UpsertPushSubscriptionInput {
+  role: 'client' | 'barber';
+  appointmentId: number | null;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+}
+
+export type UpsertPushSubscriptionResult =
+  | { ok: true; row: PushSubscriptionDbRow }
+  | { ok: false; reason: 'role_mismatch' };
+
+// Same endpoint re-subscribing under a different role (e.g. a barber's device
+// re-registering as a client, or vice versa) is treated as a conflict rather than
+// silently flipping the existing row's role — a role swap on an existing
+// subscription would be unexpected behavior for whoever owns the other role.
+export async function upsertPushSubscription(
+  db: D1Database,
+  input: UpsertPushSubscriptionInput
+): Promise<UpsertPushSubscriptionResult> {
+  const existing = await db
+    .prepare('SELECT role FROM push_subscriptions WHERE endpoint = ?')
+    .bind(input.endpoint)
+    .first<{ role: 'client' | 'barber' }>();
+
+  if (existing && existing.role !== input.role) {
+    return { ok: false, reason: 'role_mismatch' };
+  }
+
+  const row = await db
+    .prepare(
+      `INSERT INTO push_subscriptions (role, appointment_id, endpoint, p256dh, auth)
+       VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(endpoint) DO UPDATE SET
+         role = excluded.role,
+         appointment_id = excluded.appointment_id,
+         p256dh = excluded.p256dh,
+         auth = excluded.auth
+       RETURNING *`
+    )
+    .bind(input.role, input.appointmentId, input.endpoint, input.p256dh, input.auth)
+    .first<PushSubscriptionDbRow>();
+
+  if (!row) {
+    throw new Error('upsertPushSubscription: insert did not return a row');
+  }
+  return { ok: true, row };
+}
+
+export async function deletePushSubscriptionByEndpoint(db: D1Database, endpoint: string): Promise<boolean> {
+  const result = await db.prepare('DELETE FROM push_subscriptions WHERE endpoint = ?').bind(endpoint).run();
+  return (result.meta?.changes ?? 0) > 0;
+}
+
+export async function deletePushSubscriptionById(db: D1Database, id: number): Promise<boolean> {
+  const result = await db.prepare('DELETE FROM push_subscriptions WHERE id = ?').bind(id).run();
+  return (result.meta?.changes ?? 0) > 0;
+}
+
+export async function listBarberPushSubscriptions(db: D1Database): Promise<PushSubscriptionDbRow[]> {
+  const { results } = await db
+    .prepare("SELECT * FROM push_subscriptions WHERE role = 'barber'")
+    .all<PushSubscriptionDbRow>();
+  return results ?? [];
+}
+
+export async function getClientPushSubscriptionByAppointmentId(
+  db: D1Database,
+  appointmentId: number
+): Promise<PushSubscriptionDbRow | null> {
+  const row = await db
+    .prepare("SELECT * FROM push_subscriptions WHERE role = 'client' AND appointment_id = ?")
+    .bind(appointmentId)
+    .first<PushSubscriptionDbRow>();
+  return row ?? null;
+}
+
+export async function countRemindersSentToday(db: D1Database): Promise<{ kind: string; count: number }[]> {
+  const { results } = await db
+    .prepare(
+      `SELECT kind, COUNT(*) as count FROM reminders_sent
+       WHERE sent_at >= datetime('now', 'start of day')
+       GROUP BY kind`
+    )
+    .all<{ kind: string; count: number }>();
+  return results ?? [];
+}

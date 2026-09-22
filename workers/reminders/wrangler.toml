@@ -1,0 +1,20 @@
+name = "parysbarber-reminders"
+main = "src/index.ts"
+compatibility_date = "2026-08-24"
+# @block65/webcrypto-web-push uses only native Web Crypto (no node:* built-ins),
+# so nodejs_compat is not required here — verified against its published dist.
+
+[[d1_databases]]
+binding = "DB"
+database_name = "parysbarber-bookings"
+# Must stay in sync with the database_id in the root wrangler.toml — this worker
+# reads/writes the SAME D1 database as the main Astro app, it just runs its own cron.
+database_id = "b7a5003e-c010-4856-bdb6-c7411c0dec37"
+
+[triggers]
+crons = ["* * * * *"]
+
+# Secrets (never put real values in this file — set with wrangler CLI):
+#   wrangler secret put VAPID_PUBLIC_KEY
+#   wrangler secret put VAPID_PRIVATE_KEY
+#   wrangler secret put VAPID_SUBJECT

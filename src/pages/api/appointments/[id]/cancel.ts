@@ -1,7 +1,11 @@
 import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
 import { verifySessionToken, SESSION_COOKIE_NAME } from '../../../../lib/auth';
-import { cancelAppointmentById } from '../../../../lib/db';
+import {
+  cancelAppointmentById,
+  getClientPushSubscriptionByAppointmentId,
+  deletePushSubscriptionById,
+} from '../../../../lib/db';
 
 export const prerender = false;
 
@@ -29,6 +33,15 @@ export const POST: APIRoute = async ({ params, cookies }) => {
       status: 409,
       headers: { 'Content-Type': 'application/json' },
     });
+  }
+
+  try {
+    const clientSub = await getClientPushSubscriptionByAppointmentId(env.DB, cancelled.id);
+    if (clientSub) {
+      await deletePushSubscriptionById(env.DB, clientSub.id);
+    }
+  } catch (err) {
+    console.error(`Failed to delete client push subscription for cancelled appointment #${cancelled.id}:`, err);
   }
 
   return new Response(JSON.stringify({ success: true }), {

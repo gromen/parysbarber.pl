@@ -16,6 +16,7 @@
     "@astrojs/check": "^0.9.8",
     "@astrojs/cloudflare": "^13.5.0",
     "@astrojs/sitemap": "^3.7.1",
+    "@block65/webcrypto-web-push": "^2.0.0",
     "@lucide/astro": "^1.39.0",
     "@tailwindcss/vite": "^4.2.2",
     "astro": "^6.0.8",

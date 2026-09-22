@@ -1,3 +1,12 @@
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxx
 ADMIN_PASSWORD_HASH=
 SESSION_SECRET=change-me-to-a-long-random-string
+
+# VAPID key pair for Web Push (RFC 8292). Generate with:
+#   npx web-push generate-vapid-keys
+# (the `web-push` CLI is only used here to generate the keys — actual sending
+# uses @block65/webcrypto-web-push, which works on workerd). Paste the printed
+# Public/Private Key values below as-is (base64url, no padding).
+VAPID_PUBLIC_KEY=BExxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+VAPID_PRIVATE_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+VAPID_SUBJECT=mailto:kontakt@parysbarber.pl

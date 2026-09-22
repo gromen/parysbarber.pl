@@ -42,6 +42,9 @@ const ogImageURL = new URL(ogImage, Astro.site);
     <link rel="canonical" href={canonicalURL} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" href="/favicon.ico" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#001a35" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
     <meta name="generator" content={Astro.generator} />
 
     <!-- Google Fonts -->
@@ -135,6 +138,21 @@ const ogImageURL = new URL(ogImage, Astro.site);
         }
 
         window.addEventListener('cookieConsentGiven', loadGTM);
+      })();
+    </script>
+
+    <!-- Service worker registration — enables offline fallback / PWA install -->
+    <script is:inline>
+      (function () {
+        try {
+          if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+              navigator.serviceWorker.register('/sw.js').catch(function (err) {
+                console.error('Service worker registration failed:', err);
+              });
+            });
+          }
+        } catch (e) {}
       })();
     </script>
   </body>

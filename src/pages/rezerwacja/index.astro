@@ -64,6 +64,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <p class="confirmation-note">
             Potwierdzenie wysłaliśmy na Twój e-mail — znajdziesz tam link do anulowania wizyty.
           </p>
+          <button type="button" id="push-remind-btn" class="push-remind-btn">Przypomnij mi</button>
+          <div id="push-message" class="form-message" role="alert"></div>
         </div>
       </div>
     </div>
@@ -318,6 +320,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     &.is-error {
       color: var(--color-accent-red);
     }
+
+    &.is-success {
+      color: #16a34a;
+    }
   }
 
   .submit-btn {
@@ -391,6 +397,32 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       color: #9ca3af;
     }
   }
+
+  .push-remind-btn {
+    margin-top: 1rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-accent-gold);
+    background: none;
+    color: #111827;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    cursor: pointer;
+    transition: background-color 0.2s, opacity 0.2s;
+
+    :global(.dark) & {
+      color: var(--color-text-dark);
+    }
+
+    &:hover:not(:disabled) {
+      background-color: rgba(206, 171, 93, 0.15);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
 </style>
 
 <script>
@@ -411,10 +443,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
   const formMessageEl = document.getElementById('form-message') as HTMLDivElement;
   const confirmationSummaryEl = document.getElementById('confirmation-summary') as HTMLParagraphElement;
+  const pushRemindBtn = document.getElementById('push-remind-btn') as HTMLButtonElement;
+  const pushMessageEl = document.getElementById('push-message') as HTMLDivElement;
 
   let selectedService: Service | null = null;
   let selectedDate = '';
   let selectedTime = '';
+  let currentCancelToken = '';
 
   const today = new Date();
   const maxDate = new Date();
@@ -556,6 +591,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
       if (res.status === 201) {
         const data: { cancelToken: string; startAtISO: string; serviceName: string } = await res.json();
+        currentCancelToken = data.cancelToken;
         showConfirmation(data);
         return;
       }
@@ -602,7 +638,90 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     document.querySelectorAll('.booking-step').forEach((el) => el.classList.add('is-hidden'));
     stepConfirmationEl.classList.remove('is-hidden');
+
+    pushMessageEl.textContent = '';
+    pushMessageEl.classList.remove('is-error', 'is-success');
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      pushRemindBtn.disabled = true;
+      pushMessageEl.textContent = 'Powiadomienia push nie są obsługiwane w tej przeglądarce.';
+    } else {
+      pushRemindBtn.disabled = false;
+      pushRemindBtn.hidden = false;
+      pushRemindBtn.textContent = 'Przypomnij mi';
+    }
   }
+
+  function urlBase64ToUint8Array(base64String: string): Uint8Array {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; i++) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  }
+
+  pushRemindBtn.addEventListener('click', () => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      pushMessageEl.textContent = 'Powiadomienia push nie są obsługiwane w tej przeglądarce.';
+      pushMessageEl.classList.add('is-error');
+      return;
+    }
+
+    // Guard against a double-click firing two overlapping subscribe flows before
+    // requestPermission()'s promise resolves (disabling the button only happens
+    // after that, since disabling can't be done before the gesture-bound call).
+    if (pushRemindBtn.disabled) return;
+    pushRemindBtn.disabled = true;
+
+    Notification.requestPermission().then(async (permission) => {
+      if (permission !== 'granted') {
+        pushRemindBtn.disabled = permission === 'denied';
+        pushMessageEl.textContent =
+          permission === 'denied'
+            ? 'Powiadomienia zostały zablokowane w przeglądarce — włącz je w ustawieniach witryny, aby skorzystać z przypomnienia.'
+            : 'Nie wyrażono zgody na powiadomienia.';
+        pushMessageEl.classList.add('is-error');
+        return;
+      }
+
+      pushMessageEl.textContent = '';
+      pushMessageEl.classList.remove('is-error');
+
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        const keyRes = await fetch('/api/push/vapid-public-key');
+        if (!keyRes.ok) throw new Error('failed');
+        const keyData: { key: string } = await keyRes.json();
+        const applicationServerKey = urlBase64ToUint8Array(keyData.key);
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: applicationServerKey as BufferSource,
+        });
+
+        const subscribeRes = await fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            role: 'client',
+            cancelToken: currentCancelToken,
+            subscription: subscription.toJSON(),
+          }),
+        });
+
+        if (!subscribeRes.ok) throw new Error('failed');
+
+        pushRemindBtn.hidden = true;
+        pushMessageEl.textContent = 'Włączono przypomnienie push. Dziękujemy!';
+        pushMessageEl.classList.add('is-success');
+      } catch {
+        pushRemindBtn.disabled = false;
+        pushMessageEl.textContent = 'Nie udało się włączyć przypomnienia. Spróbuj ponownie.';
+        pushMessageEl.classList.add('is-error');
+      }
+    });
+  });
 
   loadServices();
 </script>

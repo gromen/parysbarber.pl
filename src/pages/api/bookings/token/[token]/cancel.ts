@@ -1,6 +1,12 @@
 import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
-import { cancelAppointmentByToken, getAppointmentByCancelToken, getAnyServiceById } from '../../../../../lib/db';
+import {
+  cancelAppointmentByToken,
+  getAppointmentByCancelToken,
+  getAnyServiceById,
+  getClientPushSubscriptionByAppointmentId,
+  deletePushSubscriptionById,
+} from '../../../../../lib/db';
 import { sendBarberCancellationEmail } from '../../../../../lib/email';
 
 export const prerender = false;
@@ -36,6 +42,15 @@ export const POST: APIRoute = async ({ params }) => {
       status: 409,
       headers: { 'Content-Type': 'application/json' },
     });
+  }
+
+  try {
+    const clientSub = await getClientPushSubscriptionByAppointmentId(db, cancelled.id);
+    if (clientSub) {
+      await deletePushSubscriptionById(db, clientSub.id);
+    }
+  } catch (err) {
+    console.error(`Failed to delete client push subscription for cancelled appointment #${cancelled.id}:`, err);
   }
 
   const service = await getAnyServiceById(db, cancelled.service_id);
