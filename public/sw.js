@@ -5,7 +5,7 @@
 
 // Bump this version string whenever the precache list or caching strategy
 // changes, so old caches get cleaned up on activate.
-const CACHE_NAME = 'parys-shell-v1';
+const CACHE_NAME = 'parys-shell-v2';
 
 // Statically known shell assets only. Astro emits hashed filenames for its
 // JS/CSS bundles, so we deliberately do NOT try to guess those paths here —
@@ -28,6 +28,13 @@ const PRECACHE_URLS = [
 // Paths matched by exact pathname for the stale-while-revalidate strategy.
 const SWR_PATHS = ['/', '/cennik', '/kontakt'];
 
+// `cache.add()`/`cache.put()` reject a Response whose `redirected` flag is
+// set (e.g. `/cennik` 307s to `/cennik/`) — re-wrapping strips that flag.
+// Shared by precaching and both runtime strategies below.
+function stripRedirected(response) {
+  return response.redirected ? new Response(response.body, response) : response;
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -36,9 +43,11 @@ self.addEventListener('install', (event) => {
       // the way a single addAll() failure would.
       return Promise.allSettled(
         PRECACHE_URLS.map((url) =>
-          cache.add(url).catch((err) => {
-            console.warn('[sw] precache failed for', url, err);
-          })
+          fetch(url)
+            .then((response) => cache.put(url, stripRedirected(response)))
+            .catch((err) => {
+              console.warn('[sw] precache failed for', url, err);
+            })
         )
       );
     }).then(() => {
@@ -75,7 +84,9 @@ function staleWhileRevalidate(request) {
       const networkFetch = fetch(request)
         .then((networkResponse) => {
           if (networkResponse && networkResponse.ok) {
-            cache.put(request, networkResponse.clone());
+            const cleanResponse = stripRedirected(networkResponse);
+            cache.put(request, cleanResponse.clone());
+            return cleanResponse;
           }
           return networkResponse;
         })
@@ -104,9 +115,7 @@ function staleWhileRevalidate(request) {
 // with no UI at all.
 function networkFirstNavigate(request) {
   return fetch(request)
-    .then((networkResponse) => {
-      return networkResponse;
-    })
+    .then((networkResponse) => stripRedirected(networkResponse))
     .catch(() => {
       return caches.match(request).then((cachedResponse) => {
         return cachedResponse || caches.match('/offline');
