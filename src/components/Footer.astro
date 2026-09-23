@@ -29,12 +29,9 @@ const year = new Date().getFullYear();
     <p class=" text-gray-500 dark:text-text-dark/50 flex items-center mt-4 justify-center sm:justify-start sm:text-left gap-4">
       Realizacja:
       Marcin Gromek
-      <a
-        href="/panel/login"
-        class="hover:text-accent-gold transition-colors duration-200"
-      >
-        · Panel pracownika
-      </a>
+      {/* Link do panelu celowo ukryty — /panel/login dalej działa pod tym
+         adresem, tylko bez linku w stopce. Przywrócić wraz z Cennik/Rezerwacja
+         w Header.astro po ogłoszeniu funkcji na fanpage'u. */}
       <a
         href="https://gromek.dev"
         target="_blank"

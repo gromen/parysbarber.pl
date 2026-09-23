@@ -4,11 +4,13 @@ import { Menu, X } from '@lucide/astro';
 
 const pathname = Astro.url.pathname;
 
+// Cennik i Rezerwacja celowo ukryte z nawigacji — strony i funkcjonalność
+// zostają w pełni działające pod swoimi adresami, tylko nie linkujemy do nich
+// z menu, dopóki nie ogłosimy tej funkcji na fanpage'u. Przywrócić wpisy
+// poniżej, gdy będzie ogłoszenie.
 const navLinks = [
   { href: '/', label: 'Strona główna' },
   { href: '/realizacje', label: 'Realizacje' },
-  { href: '/cennik', label: 'Cennik' },
-  { href: '/rezerwacja', label: 'Rezerwacja' },
   { href: '/kontakt', label: 'Kontakt' },
 ];
 
