@@ -26,3 +26,8 @@ export const BARBER_NOTIFICATION_EMAIL = 'parysbarber@gmail.com';
 export const BOOKING_FROM_EMAIL = 'Parys Saint-Barber <rezerwacje@parysbarber.pl>';
 
 export const BUSINESS_ADDRESS = 'ul. Tadeusza Kościuszki 38E/5U, 07-300 Ostrów Mazowiecka';
+
+// Stable production origin — used where a value must be an absolute URL that
+// resolves outside of the current request (e.g. images embedded in emails,
+// fetched by the recipient's mail client, not from within our own session).
+export const SITE_URL = 'https://parysbarber.pl';

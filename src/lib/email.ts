@@ -1,6 +1,13 @@
 import { Resend } from 'resend';
-import { BARBER_NOTIFICATION_EMAIL, BOOKING_FROM_EMAIL, BUSINESS_ADDRESS, TIMEZONE } from '../config/hours';
+import { BARBER_NOTIFICATION_EMAIL, BOOKING_FROM_EMAIL, BUSINESS_ADDRESS, SITE_URL, TIMEZONE } from '../config/hours';
 import { buildGoogleCalendarUrl, buildIcsContent } from './calendar';
+
+// Absolute URL — email images are fetched by the recipient's mail client, not
+// from within our request, so a relative path or a preview workers.dev origin
+// won't work. Only resolves once this branch's static assets are live on
+// SITE_URL (i.e. after merging to main), same caveat as any other email asset.
+const LOGO_URL = `${SITE_URL}/email-logo.png`;
+const LOGO_IMG_TAG = `<img src="${LOGO_URL}" alt="Parys Saint-Barber" width="96" style="display:block;margin:0 auto 20px;border-radius:50%;" />`;
 
 function formatPolishDateTime(iso: string): string {
   const date = new Date(iso);
@@ -91,6 +98,7 @@ export async function sendBookingConfirmationEmail(
 
   const html = `
     <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; color: #1a1a1a;">
+      ${LOGO_IMG_TAG}
       <h2 style="color: #111;">Rezerwacja potwierdzona</h2>
       <p>Cześć ${opts.clientName},</p>
       <p>Twoja wizyta w <strong>Parys Saint-Barber</strong> została zarezerwowana.</p>
@@ -130,6 +138,7 @@ export async function sendBarberNewBookingEmail(
   const when = formatPolishDateTime(opts.startAtISO);
   const html = `
     <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; color: #1a1a1a;">
+      ${LOGO_IMG_TAG}
       <h2 style="color: #111;">Nowa rezerwacja</h2>
       <table style="width: 100%; margin: 16px 0; border-collapse: collapse;">
         <tr><td style="padding: 4px 0; color: #555;">Klient:</td><td style="padding: 4px 0; font-weight: 600;">${opts.clientName}</td></tr>
@@ -154,6 +163,7 @@ export async function sendBarberCancellationEmail(
   const when = formatPolishDateTime(opts.startAtISO);
   const html = `
     <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; color: #1a1a1a;">
+      ${LOGO_IMG_TAG}
       <h2 style="color: #111;">Wizyta odwołana</h2>
       <table style="width: 100%; margin: 16px 0; border-collapse: collapse;">
         <tr><td style="padding: 4px 0; color: #555;">Klient:</td><td style="padding: 4px 0; font-weight: 600;">${opts.clientName}</td></tr>
