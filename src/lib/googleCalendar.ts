@@ -124,6 +124,10 @@ export async function createCalendarEvent(
           location: opts.location,
           start: { dateTime: opts.startAtISO, timeZone: TIMEZONE },
           end: { dateTime: opts.endAtISO, timeZone: TIMEZONE },
+          // Popup reminder 15 min before, via the barber's own Google Calendar app —
+          // replaces the separate workers/reminders/ cron+push worker entirely, since
+          // this is the only thing that worker still did after client_30 was removed.
+          reminders: { useDefault: false, overrides: [{ method: 'popup', minutes: 15 }] },
         }),
       }
     );
