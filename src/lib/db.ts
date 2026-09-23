@@ -20,6 +20,7 @@ export interface AppointmentRow {
   cancel_token: string;
   created_at: string;
   cancelled_at: string | null;
+  google_calendar_event_id: string | null;
 }
 
 export interface UpcomingAppointmentRow extends AppointmentRow {
@@ -246,6 +247,19 @@ export async function cancelAppointmentById(
     .bind(new Date().toISOString(), id)
     .first<AppointmentRow>();
   return row ?? null;
+}
+
+export async function setGoogleCalendarEventId(
+  db: D1Database,
+  appointmentId: number,
+  eventId: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    await db.prepare('UPDATE appointments SET google_calendar_event_id = ? WHERE id = ?').bind(eventId, appointmentId).run();
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: (err instanceof Error ? err.message : String(err)).slice(0, 200) };
+  }
 }
 
 export async function listUpcomingAppointments(

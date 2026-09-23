@@ -10,3 +10,14 @@ SESSION_SECRET=change-me-to-a-long-random-string
 VAPID_PUBLIC_KEY=BExxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 VAPID_PRIVATE_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 VAPID_SUBJECT=mailto:kontakt@parysbarber.pl
+
+# Google Calendar service account (for auto-creating calendar events on booking).
+# Create a Service Account in Google Cloud Console, enable the Calendar API,
+# generate a JSON key, then:
+#   client_email -> GOOGLE_SERVICE_ACCOUNT_EMAIL
+#   private_key  -> GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY (keep the \n sequences as-is)
+# Share the barber's Google Calendar with the service account's client_email,
+# granting "Make changes to events" permission.
+GOOGLE_SERVICE_ACCOUNT_EMAIL=xxxxx@xxxxx.iam.gserviceaccount.com
+GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nxxxx\n-----END PRIVATE KEY-----\n"
+GOOGLE_CALENDAR_ID=parysbarber@gmail.com

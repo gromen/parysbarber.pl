@@ -7,11 +7,13 @@ import {
   countFutureConfirmedAppointmentsByEmail,
   listBarberPushSubscriptions,
   deletePushSubscriptionById,
+  setGoogleCalendarEventId,
 } from '../../../lib/db';
 import { zonedDateToUTCISO } from '../../../lib/availability';
 import { sendBookingConfirmationEmail, sendBarberNewBookingEmail } from '../../../lib/email';
 import { sendPushNotification } from '../../../lib/push';
-import { TIMEZONE } from '../../../config/hours';
+import { createCalendarEvent } from '../../../lib/googleCalendar';
+import { TIMEZONE, BUSINESS_ADDRESS } from '../../../config/hours';
 
 export const prerender = false;
 
@@ -167,6 +169,32 @@ export const POST: APIRoute = async ({ request }) => {
     );
   } catch (err) {
     console.error(`Barber push notification failed for appointment #${result.appointment.id}:`, err);
+  }
+
+  try {
+    const calendarResult = await createCalendarEvent(env, {
+      summary: `${service.name} — ${result.appointment.client_name}`,
+      description: `Telefon: ${result.appointment.client_phone}\nUsługa: ${service.name}\nSzczegóły w panelu: /panel`,
+      location: BUSINESS_ADDRESS,
+      startAtISO: result.appointment.start_at,
+      endAtISO: result.appointment.end_at,
+    });
+    if (calendarResult.ok) {
+      const storeResult = await setGoogleCalendarEventId(db, result.appointment.id, calendarResult.eventId);
+      if (!storeResult.ok) {
+        console.error(
+          `Google Calendar event #${calendarResult.eventId} was created but failed to save against ` +
+            `appointment #${result.appointment.id} (${storeResult.error}) — the event is now orphaned ` +
+            `(won't be deleted on cancellation) and needs manual cleanup in the calendar.`
+        );
+      }
+    } else if (calendarResult.error !== 'not_configured') {
+      console.error(
+        `Google Calendar event creation failed for appointment #${result.appointment.id}: ${calendarResult.error}`
+      );
+    }
+  } catch (err) {
+    console.error(`Google Calendar event creation threw for appointment #${result.appointment.id}:`, err);
   }
 
   return new Response(
