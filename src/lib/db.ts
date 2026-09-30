@@ -284,7 +284,7 @@ export interface CreateBlockInput {
 
 export type CreateBlockResult =
   | { ok: true; block: BlockRow }
-  | { ok: false; reason: 'overlaps_appointment' };
+  | { ok: false; reason: 'overlaps_appointment' | 'already_blocked' };
 
 export async function createBlock(
   db: D1Database,
@@ -302,6 +302,19 @@ export async function createBlock(
 
   if (overlap) {
     return { ok: false, reason: 'overlaps_appointment' };
+  }
+
+  const covering = await db
+    .prepare(
+      `SELECT id FROM blocks
+       WHERE start_at <= ? AND end_at >= ?
+       LIMIT 1`
+    )
+    .bind(input.startAtISO, input.endAtISO)
+    .first<{ id: number }>();
+
+  if (covering) {
+    return { ok: false, reason: 'already_blocked' };
   }
 
   const inserted = await db

@@ -46,6 +46,28 @@ function dayKey(iso: string): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Warsaw' }).format(new Date(iso));
 }
 
+const midnightFormatter = new Intl.DateTimeFormat('en-GB', {
+  timeZone: 'Europe/Warsaw',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+
+function isLocalMidnight(iso: string): boolean {
+  return midnightFormatter.format(new Date(iso)) === '00:00';
+}
+
+function blockTimeLabel(block: { start_at: string; end_at: string }): string {
+  const start = timeFormatter.format(new Date(block.start_at));
+  if (isLocalMidnight(block.end_at)) {
+    if (isLocalMidnight(block.start_at) && dayKey(block.start_at) !== dayKey(block.end_at)) {
+      return 'Cały dzień';
+    }
+    return `${start} – koniec dnia`;
+  }
+  return `${start}–${timeFormatter.format(new Date(block.end_at))}`;
+}
+
 type AppointmentItem = (typeof appointments)[number] & { kind: 'appointment' };
 type BlockItem = (typeof blocks)[number] & { kind: 'block' };
 type ScheduleItem = AppointmentItem | BlockItem;
@@ -97,6 +119,10 @@ for (const item of scheduleItems) {
             </select>
           </div>
         </div>
+        <label class="all-day-toggle">
+          <input type="checkbox" id="block-all-day" />
+          <span>Cały dzień</span>
+        </label>
         <div id="block-form-message" class="form-message" role="alert"></div>
         <button type="submit" id="block-submit-btn" class="block-submit-btn">Zablokuj godziny</button>
       </form>
@@ -151,9 +177,7 @@ for (const item of scheduleItems) {
             ) : (
               <article class="appt-card block-card" id={`block-${item.id}`} data-block-id={item.id}>
                 <div class="appt-main">
-                  <p class="appt-time">
-                    {timeFormatter.format(new Date(item.start_at))}–{timeFormatter.format(new Date(item.end_at))}
-                  </p>
+                  <p class="appt-time">{blockTimeLabel(item)}</p>
                   <p class="appt-client block-label">Zablokowane</p>
                 </div>
                 <div class="appt-actions">
@@ -250,6 +274,11 @@ for (const item of scheduleItems) {
   const blockForm = document.getElementById('block-form') as HTMLFormElement;
   const blockSubmitBtn = document.getElementById('block-submit-btn') as HTMLButtonElement;
   const blockFormMessageEl = document.getElementById('block-form-message') as HTMLDivElement;
+  const blockAllDayInput = document.getElementById('block-all-day') as HTMLInputElement;
+
+  function submitLabel(): string {
+    return blockAllDayInput.checked ? 'Zablokuj dzień' : 'Zablokuj godziny';
+  }
 
   blockForm.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -261,6 +290,7 @@ for (const item of scheduleItems) {
     const date = String(formData.get('date') ?? '');
     const startTime = String(formData.get('startTime') ?? '');
     const endTime = String(formData.get('endTime') ?? '');
+    const allDay = blockAllDayInput.checked;
 
     blockSubmitBtn.disabled = true;
     blockSubmitBtn.textContent = 'Blokowanie…';
@@ -269,7 +299,7 @@ for (const item of scheduleItems) {
       const res = await fetch('/api/blocks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date, startTime, endTime }),
+        body: JSON.stringify(allDay ? { date, allDay: true } : { date, startTime, endTime }),
       });
 
       if (res.ok) {
@@ -279,7 +309,13 @@ for (const item of scheduleItems) {
 
       const errorData = (await res.json().catch(() => ({}))) as { error?: string };
       if (res.status === 409 && errorData.error === 'overlaps_appointment') {
-        blockFormMessageEl.textContent = 'W tym przedziale masz już zarezerwowaną wizytę klienta.';
+        blockFormMessageEl.textContent = allDay
+          ? 'Tego dnia masz już wizytę klienta — odwołaj ją lub zablokuj tylko wolne godziny.'
+          : 'W tym przedziale masz już zarezerwowaną wizytę klienta.';
+      } else if (res.status === 409 && errorData.error === 'already_blocked') {
+        blockFormMessageEl.textContent = allDay
+          ? 'Ten dzień jest już zablokowany.'
+          : 'Te godziny są już zablokowane.';
       } else {
         blockFormMessageEl.textContent = 'Nie udało się zablokować godzin. Spróbuj ponownie.';
       }
@@ -289,7 +325,7 @@ for (const item of scheduleItems) {
       blockFormMessageEl.classList.add('is-error');
     } finally {
       blockSubmitBtn.disabled = false;
-      blockSubmitBtn.textContent = 'Zablokuj godziny';
+      blockSubmitBtn.textContent = submitLabel();
     }
   });
 
@@ -329,6 +365,18 @@ for (const item of scheduleItems) {
 
   applyPastTimeFilter();
   blockDateInput.addEventListener('change', applyPastTimeFilter);
+
+  function applyAllDayMode() {
+    const allDay = blockAllDayInput.checked;
+    for (const select of [blockStartSelect, blockEndSelect]) {
+      select.disabled = allDay;
+      select.required = !allDay;
+    }
+    blockSubmitBtn.textContent = submitLabel();
+  }
+
+  applyAllDayMode();
+  blockAllDayInput.addEventListener('change', applyAllDayMode);
 
   const pushToggleInput = document.getElementById('push-toggle-input') as HTMLInputElement;
   const pushStatusEl = document.getElementById('push-status') as HTMLParagraphElement;
@@ -622,6 +670,33 @@ for (const item of scheduleItems) {
         outline: 2px solid var(--color-accent-gold);
         outline-offset: 1px;
       }
+
+      &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  .all-day-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    align-self: flex-start;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+
+    :global(.dark) & {
+      color: var(--color-text-dark);
+    }
+
+    input {
+      width: 1.125rem;
+      height: 1.125rem;
+      accent-color: var(--color-accent-gold);
+      cursor: pointer;
     }
   }
 
