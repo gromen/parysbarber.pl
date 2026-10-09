@@ -4,6 +4,7 @@ export interface ServiceRow {
   id: number;
   name: string;
   duration_minutes: number;
+  price_pln: number;
   active: number;
   sort_order: number;
 }

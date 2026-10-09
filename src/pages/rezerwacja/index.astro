@@ -171,16 +171,27 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   }
 
   .service-name {
+    min-width: 0;
     font-weight: 500;
   }
 
-  .service-duration {
+  .service-meta {
+    flex-shrink: 0;
     font-size: 0.875rem;
     color: #6b7280;
     white-space: nowrap;
 
     :global(.dark) & {
       color: #9ca3af;
+    }
+  }
+
+  .service-price {
+    font-weight: 600;
+    color: #111827;
+
+    :global(.dark) & {
+      color: var(--color-text-dark);
     }
   }
 
@@ -401,6 +412,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     id: number;
     name: string;
     durationMinutes: number;
+    pricePln: number;
   }
 
   const servicesListEl = document.getElementById('services-list') as HTMLDivElement;
@@ -447,8 +459,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       btn.type = 'button';
       btn.className = 'service-option';
       btn.dataset.serviceId = String(service.id);
-      btn.innerHTML = `<span class="service-name">${escapeHtml(service.name)}</span><span class="service-duration">${service.durationMinutes} min</span>`;
-      btn.setAttribute('aria-label', `Wybierz usługę: ${service.name} (${service.durationMinutes} min)`);
+      btn.innerHTML = `<span class="service-name">${escapeHtml(service.name)}</span><span class="service-meta"><span class="service-price">${service.pricePln} zł</span> · <span class="service-duration">${service.durationMinutes} min</span></span>`;
+      btn.setAttribute('aria-label', `Wybierz usługę: ${service.name}, ${service.pricePln} zł, ${service.durationMinutes} min`);
       btn.addEventListener('click', () => selectService(service, btn));
       servicesListEl.appendChild(btn);
     });

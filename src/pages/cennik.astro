@@ -1,8 +1,10 @@
 ---
 export const prerender = true;
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { Scissors, Brush, Sparkles, Clock } from '@lucide/astro';
+import { Scissors, ScissorsLineDashed, Brush, Sparkles, Palette, Crown, Clock } from '@lucide/astro';
 
+// NOTE: prices and durations must stay in sync with the `services` table in D1
+// (migrations/0007_new_pricing.sql) — the booking flow reads them from there.
 const priceItems = [
   {
     name: 'Strzyżenie',
@@ -13,28 +15,52 @@ const priceItems = [
     icon: Scissors,
   },
   {
-    name: 'Strzyżenie brody',
-    description: 'Modelowanie i pielęgnacja brody na miarę',
-    duration: '40 min',
-    price: '40 zł',
+    name: 'Same boki',
+    description: 'Szybkie odświeżenie boków i karku między pełnymi strzyżeniami',
+    duration: '30 min',
+    price: '50 zł',
     accent: 'gold',
+    icon: ScissorsLineDashed,
+  },
+  {
+    name: 'Broda',
+    description: 'Modelowanie i pielęgnacja brody na miarę',
+    duration: '30 min',
+    price: '40 zł',
+    accent: 'blue',
     icon: Brush,
   },
   {
-    name: 'Combo (włosy + broda)',
+    name: 'Combo (strzyżenie + broda)',
     description: 'Pełny zestaw — strzyżenie i broda w jednej wizycie',
     duration: '60 min',
     price: '100 zł',
-    accent: 'blue',
+    accent: 'red',
     featured: true,
     icon: Sparkles,
+  },
+  {
+    name: 'Coverowanie + broda',
+    description: 'Modelowanie brody z dyskretnym maskowaniem siwizny i wyrównaniem koloru',
+    duration: '50 min',
+    price: '70 zł',
+    accent: 'gold',
+    icon: Palette,
+  },
+  {
+    name: 'Combo + coverowanie brody',
+    description: 'Pełna metamorfoza — strzyżenie, broda i coverowanie siwizny',
+    duration: '90 min',
+    price: '130 zł',
+    accent: 'blue',
+    icon: Crown,
   },
 ];
 ---
 
 <BaseLayout
   title="Cennik — Parys Saint-Barber"
-  description="Cennik usług Parys Saint-Barber: strzyżenie, strzyżenie brody i combo. Sprawdź ceny i zarezerwuj wizytę online."
+  description="Cennik Parys Saint-Barber: strzyżenie, same boki, broda, coverowanie brody i pakiety combo. Sprawdź ceny i zarezerwuj wizytę online."
 >
   <section class="py-16 px-4 max-w-5xl mx-auto">
 
@@ -47,7 +73,7 @@ const priceItems = [
     </div>
 
     <!-- Price cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-8">
       {priceItems.map((item) => (
         <article class:list={['price-card', `price-card--${item.accent}`, { 'price-card--featured': item.featured }]}>
           {item.featured && <span class="price-badge">Najczęściej wybierane</span>}
@@ -183,6 +209,7 @@ const priceItems = [
   .price-name {
     font-size: 1.25rem;
     font-weight: 700;
+    text-wrap: balance;
     color: #111827;
     margin-bottom: 0.5rem;
 
@@ -209,6 +236,8 @@ const priceItems = [
     font-weight: 600;
     color: #111827;
     line-height: 1;
+    /* push price + duration to the card bottom so they align across a row */
+    margin-top: auto;
     margin-bottom: 0.5rem;
 
     :global(.dark) & {

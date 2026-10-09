@@ -12,6 +12,7 @@ export const GET: APIRoute = async () => {
         id: s.id,
         name: s.name,
         durationMinutes: s.duration_minutes,
+        pricePln: s.price_pln,
       })),
     }),
     { status: 200, headers: { 'Content-Type': 'application/json' } }
