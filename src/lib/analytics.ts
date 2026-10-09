@@ -28,7 +28,14 @@ export function trackEvent(name: string, params: Record<string, string | number>
   window.dataLayer = window.dataLayer || [];
   // GTM's data model keeps pushed keys until overwritten — reset every known
   // param so e.g. service_name from a booking doesn't leak into a later click.
-  window.dataLayer.push({ link_location: undefined, service_name: undefined, ...params, event: name });
+  window.dataLayer.push({
+    link_location: undefined,
+    service_name: undefined,
+    value: undefined,
+    currency: undefined,
+    ...params,
+    event: name,
+  });
 }
 
 /** Tracks clicks on tel: and mailto: links anywhere on the page. */

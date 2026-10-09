@@ -618,7 +618,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     document.querySelectorAll('.booking-step').forEach((el) => el.classList.add('is-hidden'));
     stepConfirmationEl.classList.remove('is-hidden');
 
-    trackEvent('booking_complete', { service_name: data.serviceName });
+    const price = selectedService?.pricePln ?? 0;
+    trackEvent('booking_complete', {
+      service_name: data.serviceName,
+      ...(price > 0 && { value: price, currency: 'PLN' }),
+    });
   }
 
   loadServices();
