@@ -395,6 +395,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 </style>
 
 <script>
+  import { trackEvent } from '../../lib/analytics';
+
   interface Service {
     id: number;
     name: string;
@@ -603,6 +605,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
     document.querySelectorAll('.booking-step').forEach((el) => el.classList.add('is-hidden'));
     stepConfirmationEl.classList.remove('is-hidden');
+
+    trackEvent('booking_complete', { service_name: data.serviceName });
   }
 
   loadServices();

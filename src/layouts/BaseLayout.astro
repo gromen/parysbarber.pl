@@ -123,7 +123,7 @@ const manifestHref = Astro.url.pathname.startsWith('/panel')
       (function () {
         var GTM_ID = 'GTM-PHMLWWVN';
         var loaded = false;
-        var isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+        var isLocal = ['localhost', '127.0.0.1', '[::1]'].indexOf(location.hostname) !== -1;
 
         function loadGTM() {
           if (loaded || isLocal) return;
@@ -146,6 +146,12 @@ const manifestHref = Astro.url.pathname.startsWith('/panel')
 
         window.addEventListener('cookieConsentGiven', loadGTM);
       })();
+    </script>
+
+    <!-- GA4 tel:/mailto: click tracking (no-op without cookie consent; staff panel excluded) -->
+    <script>
+      import { initContactLinkTracking } from '../lib/analytics';
+      if (!location.pathname.startsWith('/panel')) initContactLinkTracking();
     </script>
 
     <!-- Service worker registration — enables offline fallback / PWA install -->
