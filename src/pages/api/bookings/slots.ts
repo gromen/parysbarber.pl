@@ -1,12 +1,11 @@
 import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
-import { getAvailableSlots, getServiceById } from '../../../lib/db';
-import { todayDateStrInZone } from '../../../lib/availability';
+import { getServiceById } from '../../../lib/db';
+import { getSlotsWithCalendar } from '../../../lib/slotsWithCalendar';
+import { todayDateStrInZone, isValidDateStr } from '../../../lib/availability';
 import { TIMEZONE } from '../../../config/hours';
 
 export const prerender = false;
-
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 function jsonError(message: string, status: number): Response {
   return new Response(JSON.stringify({ error: message }), {
@@ -22,7 +21,7 @@ export const GET: APIRoute = async ({ url }) => {
   if (!serviceIdParam || !/^\d+$/.test(serviceIdParam)) {
     return jsonError('invalid_service_id', 400);
   }
-  if (!dateParam || !DATE_RE.test(dateParam)) {
+  if (!dateParam || !isValidDateStr(dateParam)) {
     return jsonError('invalid_date', 400);
   }
 
@@ -39,7 +38,7 @@ export const GET: APIRoute = async ({ url }) => {
     return jsonError('service_not_found', 400);
   }
 
-  const slots = await getAvailableSlots(db, serviceId, dateParam);
+  const slots = await getSlotsWithCalendar(env, serviceId, dateParam);
   return new Response(JSON.stringify({ slots }), {
     status: 200,
     headers: { 'Content-Type': 'application/json' },

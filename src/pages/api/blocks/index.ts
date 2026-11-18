@@ -2,12 +2,11 @@ import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
 import { verifySessionToken, SESSION_COOKIE_NAME } from '../../../lib/auth';
 import { createBlock } from '../../../lib/db';
-import { zonedDateToUTCISO } from '../../../lib/availability';
+import { zonedDateToUTCISO, isValidDateStr } from '../../../lib/availability';
 import { TIMEZONE } from '../../../config/hours';
 
 export const prerender = false;
 
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^\d{2}:\d{2}$/;
 
 function nextDateStr(dateStr: string): string {
@@ -38,7 +37,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
   const { date, startTime, endTime, allDay } = body;
 
-  if (typeof date !== 'string' || !DATE_RE.test(date)) {
+  if (typeof date !== 'string' || !isValidDateStr(date)) {
     return jsonError('invalid_date', 400);
   }
   if (allDay !== undefined && typeof allDay !== 'boolean') {

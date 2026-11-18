@@ -100,6 +100,48 @@ export function todayDateStrInZone(now: Date, timezone: string): string {
   return `${parts.year}-${String(parts.month).padStart(2, '0')}-${String(parts.day).padStart(2, '0')}`;
 }
 
+const DATE_STR_RE = /^\d{4}-\d{2}-\d{2}$/;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+// True only for a real calendar date in YYYY-MM-DD form. The regex alone lets
+// through things like `2026-02-32` / `2026-13-01`, which become Invalid Date
+// downstream and throw a RangeError on toISOString() (→ 500 instead of 400).
+// Round-tripping through Date.UTC rejects them, since the overflow rolls into
+// the next month/year and no longer matches the input.
+export function isValidDateStr(s: string): boolean {
+  if (!DATE_STR_RE.test(s)) return false;
+  const [year, month, day] = s.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === s;
+}
+
+// Whether `dateStr` (YYYY-MM-DD, local to TIMEZONE) can have any slots at all:
+// not in the past, within the booking window, and on a working weekday. Exported
+// so callers can skip expensive lookups (e.g. Google Calendar) for dates that
+// would yield no slots anyway; computeAvailableSlots uses the same check.
+export function isBookableDate(dateStr: string, now: Date): boolean {
+  const todayDateStr = todayDateStrInZone(now, TIMEZONE);
+  const maxDate = new Date(now.getTime() + BOOKING_WINDOW_DAYS * DAY_MS);
+  const maxDateStr = todayDateStrInZone(maxDate, TIMEZONE);
+
+  if (dateStr < todayDateStr || dateStr > maxDateStr) return false;
+
+  return WORKING_HOURS[dateStrWeekday(dateStr, TIMEZONE)] != null;
+}
+
+// UTC window used to fetch busy time (D1 appointments/blocks, Google Calendar
+// events) for one local day: the UTC calendar day widened by a day on each side,
+// so anything straddling local midnight (Europe/Warsaw is UTC+1/+2) is still
+// considered for overlap checks. Shared so all sources use exactly the same range.
+export function paddedDayWindowUTC(dateISO: string): { startISO: string; endISO: string } {
+  const dayStartMs = new Date(`${dateISO}T00:00:00.000Z`).getTime();
+  const dayEndMs = new Date(`${dateISO}T23:59:59.999Z`).getTime();
+  return {
+    startISO: new Date(dayStartMs - DAY_MS).toISOString(),
+    endISO: new Date(dayEndMs + DAY_MS).toISOString(),
+  };
+}
+
 export function computeAvailableSlots({
   date,
   serviceDurationMinutes,
@@ -108,15 +150,10 @@ export function computeAvailableSlots({
 }: ComputeAvailableSlotsArgs): string[] {
   const timezone = TIMEZONE;
 
-  const todayDateStr = todayDateStrInZone(now, timezone);
-  const maxDate = new Date(now.getTime() + BOOKING_WINDOW_DAYS * 24 * 60 * 60 * 1000);
-  const maxDateStr = todayDateStrInZone(maxDate, timezone);
+  if (!isBookableDate(date, now)) return [];
 
-  if (date < todayDateStr || date > maxDateStr) return [];
-
-  const weekday = dateStrWeekday(date, timezone);
-  const hours = WORKING_HOURS[weekday];
-  if (!hours) return [];
+  // Non-null: isBookableDate already rejected days without working hours.
+  const hours = WORKING_HOURS[dateStrWeekday(date, timezone)]!;
 
   const [openHour, openMinute] = hours.open.split(':').map(Number);
   const [closeHour, closeMinute] = hours.close.split(':').map(Number);

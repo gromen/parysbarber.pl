@@ -3,21 +3,20 @@ import { env } from 'cloudflare:workers';
 import {
   createAppointment,
   getServiceById,
-  getAvailableSlots,
   countFutureConfirmedAppointmentsByEmail,
   listBarberPushSubscriptions,
   deletePushSubscriptionById,
   setGoogleCalendarEventId,
 } from '../../../lib/db';
-import { zonedDateToUTCISO } from '../../../lib/availability';
+import { zonedDateToUTCISO, isValidDateStr } from '../../../lib/availability';
 import { sendBookingConfirmationEmail, sendBarberNewBookingEmail } from '../../../lib/email';
 import { sendPushNotification } from '../../../lib/push';
 import { createCalendarEvent } from '../../../lib/googleCalendar';
+import { getSlotsWithCalendar } from '../../../lib/slotsWithCalendar';
 import { TIMEZONE, BUSINESS_ADDRESS } from '../../../config/hours';
 
 export const prerender = false;
 
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^\d{2}:\d{2}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_RE = /^[\d+\s()-]{7,20}$/;
@@ -52,7 +51,7 @@ export const POST: APIRoute = async ({ request }) => {
   if (typeof serviceId !== 'number' || !Number.isInteger(serviceId)) {
     return jsonError('invalid_service_id', 400);
   }
-  if (typeof date !== 'string' || !DATE_RE.test(date)) {
+  if (typeof date !== 'string' || !isValidDateStr(date)) {
     return jsonError('invalid_date', 400);
   }
   if (typeof time !== 'string' || !TIME_RE.test(time)) {
@@ -75,8 +74,9 @@ export const POST: APIRoute = async ({ request }) => {
     return jsonError('service_not_found', 400);
   }
 
-  // Never trust client-submitted availability — recompute server-side.
-  const availableSlots = await getAvailableSlots(db, serviceId, date);
+  // Never trust client-submitted availability — recompute server-side, including
+  // events the barber added by hand to Google Calendar (phone bookings etc.).
+  const availableSlots = await getSlotsWithCalendar(env, serviceId, date);
   if (!availableSlots.includes(time)) {
     return jsonError('slot_taken', 409);
   }

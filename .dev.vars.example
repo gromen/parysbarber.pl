@@ -18,6 +18,13 @@ VAPID_SUBJECT=mailto:kontakt@parysbarber.pl
 #   private_key  -> GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY (keep the \n sequences as-is)
 # Share the barber's Google Calendar with the service account's client_email,
 # granting "Make changes to events" permission.
-GOOGLE_SERVICE_ACCOUNT_EMAIL=xxxxx@xxxxx.iam.gserviceaccount.com
-GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nxxxx\n-----END PRIVATE KEY-----\n"
+# Events added to this calendar by hand (e.g. phone bookings) also block the
+# overlapping slots on /rezerwacja — read live from Google, not stored in D1:
+#   - timed events marked "Free"/"Dostępny" do NOT block;
+#   - all-day events ALWAYS block the whole day (regardless of Free/Busy).
+#   - birthdays (auto-added by Google from contacts) and working-location
+#     entries never block; out-of-office / focus-time events do.
+# If Google is unreachable, booking falls back to D1-only availability.
+GOOGLE_SERVICE_ACCOUNT_EMAIL=parysbarber-booking@parysbarber-booking.iam.gserviceaccount.com
+GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC8PJX+r7+lk8hV\n2y+6GQCPtfltr/+oMGZXL6RBPjyToxvIL2k5XEK5PfgJD/FGwVNxC3xzElGyJzpy\nnZ+klkA1pYbnh3YbrV/LbYQQjFx4YPWi8Uj5GMySxaZRNj57/XA0497KU2m4ol9d\nvXM9grJT9IzbzAGMAkj0eQbJzoMJfSZG39SBbne0vrcAwKiWo3sbDexlJbHFiwYy\nC4k1WKW/sDJKxSf96yMWqZnnv+K7JO5bxUwF7OehqjALmq9XYLs7TI80Tafock/l\nvrO71aVlEjr338Ww0ruKH1Xpnm9ujdPn2mWJUGpCV3HCuGevdLLP4GVYx8+d9cYE\nMujoU8fzAgMBAAECggEAMMTTqcI3+Xqh31ij82ex5QnlHz2Hk7hCc5lEyaCJykhq\nlMFv1iwon1zGS/bE8Kt65mFu81NONkWCl5pt95Lz/NIvcwH+ICqZlJeBrVXoSUn5\nqicwXFVH/0jVD9ppcu9VKGbXXH0i+XKcGanRVyDq+eR0sCeZSQB4jVpj31oxSf4g\nb6biNnTuVdLX71rycm8YwJ4uLx4V/kX1NnknBY9SgcIvO/iQgMTEwYGHj8dGuLgV\nALUMJreJ+IXpHaC5RHe82MuHM7faz4LYMQBp4b1YPCunzBX9dDB6fdsYmV1oYbbC\nhmk/ITrLE63o1RPMKlvq5TT6Dd2W3EaZkDDFPovHlQKBgQDekWY67VrNoC1LxAzP\nZLYwTqyML0tCiht32Aap3JhcB2ElcWCbpcG2cfuuc7/kX/xlzKK4khJG/TEjPzJC\nQ7jAq8f3ob11rVk+VeWm2ULDHE4Haku4oCJwzkqMK0cECOYcs3u3wPOpI/BkoGb5\nIB+/g1iFy3pgrCVP4reBlpRmtwKBgQDYgwPV4Z2dVDKmAwb4jpbrtkVdoLE//390\neRZU6fmlvcGZDEP/UvqQj2LnMHE+l3wBAURpMfy8hNfUWX5P2ssM+Bn5n0HbDNMC\nn3dO0IISzUPIkg1G74FTB1AagvnFxE5y2bM+wYar3j4YLZvbGM1+p2ERkoJpGrI6\nGOnMZAsMpQKBgQCR+toLomyhXAL5o+AnE05wBtojpE1/migEBfvw45BHJEvyjBeq\nXyDcMoy6Uo81EkPw3TSJTL2SNDVLggLL9bEzJjilUj969LUJLrvPIMcqQ+Fl+bEq\nqlWMmbHJmAUfP1r2zj5COttWQA1HYvHHSuun6FVihCCDUcWzTOfBpms1pwKBgDFH\nAGR5iSn5s91c6wU/TtIvFfKNVEpAmH2l4ZNJ/WvfmGSBCijedfDY8aW0vNGGIM8J\nvsxCeEdf5M+L3tfF8FjvTtoliROWA6ChMsJZaoFk/nxz4Vm3wTNogq7GCJseZsx1\nB/rMiR4s4u0V1Fc1ee/NoKYjNlM9pDrc2LmQO4ORAoGAebOcjC9duAhaUAtCaYhW\nBnKQi6kcSqi09O8Fodvi+k0Jni52NWkbD2pbaihw76DvVCSUnAoiN6GBt8dODb3p\nDzC5NPzRiDXvi9go0XqWOWQQjB0vZDXwC6WILKhcUhMzoYn1KP0z22ljHgDxrgR/\nrrgr60xtaekjdG7bTzTilpQ=\n-----END PRIVATE KEY-----\n"
 GOOGLE_CALENDAR_ID=parysbarber@gmail.com

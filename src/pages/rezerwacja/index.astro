@@ -430,6 +430,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   let selectedService: Service | null = null;
   let selectedDate = '';
   let selectedTime = '';
+  // Slot lookups can be slow (the server may consult Google Calendar), so a
+  // response for a previous date/service could arrive after the current one.
+  // Each new request aborts the previous one, and a response is rendered only if
+  // it still matches the current selection.
+  let slotsAbortController: AbortController | null = null;
 
   const today = new Date();
   const maxDate = new Date();
@@ -481,10 +486,15 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     resetContact();
     if (selectedDate && selectedService) {
       fetchSlots();
+    } else {
+      // Date cleared — resetSlots() aborts a still-pending request and clears the
+      // "loading" placeholder, so the list can't hang or be repopulated.
+      resetSlots();
     }
   });
 
   function resetSlots() {
+    slotsAbortController?.abort();
     selectedTime = '';
     stepSlotsEl.classList.add('is-disabled');
     slotsListEl.innerHTML = '';
@@ -499,15 +509,30 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
   async function fetchSlots() {
     if (!selectedService || !selectedDate) return;
+    slotsAbortController?.abort();
+    const controller = new AbortController();
+    slotsAbortController = controller;
+    const serviceId = selectedService.id;
+    const date = selectedDate;
+    const isCurrent = () =>
+      slotsAbortController === controller && selectedService?.id === serviceId && selectedDate === date;
+
     stepSlotsEl.classList.remove('is-disabled');
     slotsListEl.innerHTML = '<p class="loading-text">Ładowanie terminów…</p>';
     try {
-      const res = await fetch(`/api/bookings/slots?serviceId=${selectedService.id}&date=${selectedDate}`);
+      const res = await fetch(`/api/bookings/slots?serviceId=${serviceId}&date=${date}`, {
+        signal: controller.signal,
+      });
       if (!res.ok) throw new Error('failed');
       const data: { slots: string[] } = await res.json();
+      if (!isCurrent()) return;
       renderSlots(data.slots);
-    } catch {
+    } catch (err) {
+      // Aborted or superseded requests are expected — the newer request owns the UI.
+      if ((err instanceof DOMException && err.name === 'AbortError') || !isCurrent()) return;
       slotsListEl.innerHTML = '<p class="slots-empty">Nie udało się załadować terminów. Spróbuj ponownie.</p>';
+    } finally {
+      if (slotsAbortController === controller) slotsAbortController = null;
     }
   }
 

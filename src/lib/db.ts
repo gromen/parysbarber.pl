@@ -1,4 +1,4 @@
-import { computeAvailableSlots } from './availability';
+import { computeAvailableSlots, paddedDayWindowUTC, type ExistingAppointment } from './availability';
 
 export interface ServiceRow {
   id: number;
@@ -55,19 +55,22 @@ export async function getAnyServiceById(db: D1Database, serviceId: number): Prom
   return row ?? null;
 }
 
+// `extraBusy` lets callers add busy intervals from outside D1 (e.g. events the
+// barber added by hand to Google Calendar — see src/lib/slotsWithCalendar.ts).
+// Kept as a plain parameter so this module stays free of Google/env imports.
 export async function getAvailableSlots(
   db: D1Database,
   serviceId: number,
-  dateISO: string
+  dateISO: string,
+  extraBusy: ExistingAppointment[] = []
 ): Promise<string[]> {
   const service = await getServiceById(db, serviceId);
   if (!service) return [];
 
-  const dayStart = `${dateISO}T00:00:00.000Z`;
-  const dayEnd = `${dateISO}T23:59:59.999Z`;
+  // Widened by a day on each side so appointments that straddle local midnight
+  // (relative to UTC storage) are still considered for overlap checks.
+  const range = paddedDayWindowUTC(dateISO);
 
-  // Widen the window by a day on each side so appointments that straddle local
-  // midnight (relative to UTC storage) are still considered for overlap checks.
   const { results } = await db
     .prepare(
       `SELECT start_at, end_at FROM appointments
@@ -75,10 +78,7 @@ export async function getAvailableSlots(
        AND start_at < ? AND end_at > ?
        ORDER BY start_at ASC`
     )
-    .bind(
-      new Date(new Date(dayEnd).getTime() + 24 * 60 * 60 * 1000).toISOString(),
-      new Date(new Date(dayStart).getTime() - 24 * 60 * 60 * 1000).toISOString()
-    )
+    .bind(range.endISO, range.startISO)
     .all<{ start_at: string; end_at: string }>();
 
   const existingAppointments = (results ?? []).map((r) => ({
@@ -92,10 +92,7 @@ export async function getAvailableSlots(
        WHERE start_at < ? AND end_at > ?
        ORDER BY start_at ASC`
     )
-    .bind(
-      new Date(new Date(dayEnd).getTime() + 24 * 60 * 60 * 1000).toISOString(),
-      new Date(new Date(dayStart).getTime() - 24 * 60 * 60 * 1000).toISOString()
-    )
+    .bind(range.endISO, range.startISO)
     .all<{ start_at: string; end_at: string }>();
 
   const existingBlocks = (blockResults ?? []).map((r) => ({
@@ -106,7 +103,7 @@ export async function getAvailableSlots(
   return computeAvailableSlots({
     date: dateISO,
     serviceDurationMinutes: service.duration_minutes,
-    existingAppointments: [...existingAppointments, ...existingBlocks],
+    existingAppointments: [...existingAppointments, ...existingBlocks, ...extraBusy],
     now: new Date(),
   });
 }
