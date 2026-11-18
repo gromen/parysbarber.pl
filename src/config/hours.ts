@@ -15,8 +15,9 @@ export const BUFFER_MINUTES = 5;
 // Minimalne wyprzedzenie rezerwacji.
 export const MIN_LEAD_TIME_HOURS = 2;
 
-// Ile dni w przód klient może przeglądać dostępne terminy.
-export const BOOKING_WINDOW_DAYS = 30;
+// Ile miesięcy kalendarzowych w przód (licząc od dzisiejszej daty w Europe/Warsaw)
+// klient może przeglądać dostępne terminy, np. 18.11 → do 18.01 włącznie.
+export const BOOKING_WINDOW_MONTHS = 2;
 
 export const TIMEZONE = 'Europe/Warsaw';
 

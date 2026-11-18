@@ -1,5 +1,13 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { TIMEZONE } from '../../config/hours';
+import { todayDateStrInZone, maxBookableDateStr } from '../../lib/availability';
+
+// Computed per request (output: 'server') in Europe/Warsaw, so the picker's
+// range matches what the API accepts (isBookableDate).
+const now = new Date();
+const minDate = todayDateStrInZone(now, TIMEZONE);
+const maxDate = maxBookableDateStr(now);
 ---
 
 <BaseLayout
@@ -25,7 +33,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       <div id="step-date" class="booking-step is-disabled">
         <h2 class="step-title">2. Wybierz dzień</h2>
         <label for="date-input" class="field-label">Data wizyty</label>
-        <input type="date" id="date-input" class="date-input" disabled />
+        <input type="date" id="date-input" class="date-input" min={minDate} max={maxDate} disabled />
       </div>
 
       <!-- Step 3: slots -->
@@ -435,12 +443,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   // Each new request aborts the previous one, and a response is rendered only if
   // it still matches the current selection.
   let slotsAbortController: AbortController | null = null;
-
-  const today = new Date();
-  const maxDate = new Date();
-  maxDate.setDate(today.getDate() + 30);
-  dateInput.min = today.toISOString().slice(0, 10);
-  dateInput.max = maxDate.toISOString().slice(0, 10);
 
   async function loadServices() {
     try {

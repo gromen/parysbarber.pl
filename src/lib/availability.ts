@@ -1,4 +1,4 @@
-import { WORKING_HOURS, BUFFER_MINUTES, MIN_LEAD_TIME_HOURS, BOOKING_WINDOW_DAYS, TIMEZONE } from '../config/hours';
+import { WORKING_HOURS, BUFFER_MINUTES, MIN_LEAD_TIME_HOURS, BOOKING_WINDOW_MONTHS, TIMEZONE } from '../config/hours';
 
 const SLOT_STEP_MINUTES = 15;
 
@@ -115,14 +115,26 @@ export function isValidDateStr(s: string): boolean {
   return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === s;
 }
 
+// Last bookable day (YYYY-MM-DD, inclusive): today's date in TIMEZONE plus
+// BOOKING_WINDOW_MONTHS calendar months. When the target month is shorter, the
+// day is clamped to its last day (31.12 → 28.02, or 29.02 in a leap year).
+// Pure Y/M/D arithmetic via Date.UTC, so no DST/timezone drift.
+export function maxBookableDateStr(now: Date): string {
+  const [year, month, day] = todayDateStrInZone(now, TIMEZONE).split('-').map(Number);
+  const targetMonthIndex = month - 1 + BOOKING_WINDOW_MONTHS; // may exceed 11; Date.UTC rolls the year
+  // Day 0 of the following month = last day of the target month.
+  const lastDayOfTarget = new Date(Date.UTC(year, targetMonthIndex + 1, 0)).getUTCDate();
+  const target = new Date(Date.UTC(year, targetMonthIndex, Math.min(day, lastDayOfTarget)));
+  return target.toISOString().slice(0, 10);
+}
+
 // Whether `dateStr` (YYYY-MM-DD, local to TIMEZONE) can have any slots at all:
 // not in the past, within the booking window, and on a working weekday. Exported
 // so callers can skip expensive lookups (e.g. Google Calendar) for dates that
 // would yield no slots anyway; computeAvailableSlots uses the same check.
 export function isBookableDate(dateStr: string, now: Date): boolean {
   const todayDateStr = todayDateStrInZone(now, TIMEZONE);
-  const maxDate = new Date(now.getTime() + BOOKING_WINDOW_DAYS * DAY_MS);
-  const maxDateStr = todayDateStrInZone(maxDate, TIMEZONE);
+  const maxDateStr = maxBookableDateStr(now);
 
   if (dateStr < todayDateStr || dateStr > maxDateStr) return false;
 
